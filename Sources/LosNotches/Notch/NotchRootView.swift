@@ -15,7 +15,7 @@ struct NotchRootView: View {
             ZStack(alignment: .top) {
                 NotchShape(topRadius: topRadius, bottomRadius: bottomRadius)
                     .fill(Color.black)
-                    .opacity(mode == .hidden ? 0.001 : 1)
+                    .opacity(mode == .hidden || (mode == .closed && !model.hasNotch) ? 0.001 : 1)
                 content
                     .padding(.horizontal, topRadius)
                     .clipShape(NotchShape(topRadius: topRadius, bottomRadius: bottomRadius))

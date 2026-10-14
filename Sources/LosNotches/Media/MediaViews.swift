@@ -9,7 +9,7 @@ struct MediaWidgetView: View {
         if let n = media.nowPlaying {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 10) {
-                    AlbumArt(image: media.artwork, size: 56, radius: s.albumCornerRadius)
+                    AlbumArt(image: media.artwork, size: 64, radius: s.albumCornerRadius)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(n.title.isEmpty ? "Unknown Title" : n.title).font(.system(size: 13, weight: .semibold)).lineLimit(1)
                         Text(n.artist.isEmpty ? "Unknown Artist" : n.artist).font(.system(size: 11)).opacity(0.6).lineLimit(1)

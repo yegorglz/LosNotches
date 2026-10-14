@@ -23,7 +23,7 @@ final class TrayService {
     func url(for item: TrayItem) -> URL? { store.url(for: item.id) }
 
     func add(_ urls: [URL], move: Bool) {
-        _ = try? store.add(urls, move: move)
+        do { _ = try store.add(urls, move: move) } catch { NSLog("LosNotches tray add failed: \(error)") }
         sync()
     }
 
@@ -145,7 +145,6 @@ struct DropTargetsView: View {
         .padding(.top, max(model.closedScreenRect.height, 28) + 6)
         .padding(.horizontal, 24).padding(.bottom, 18)
         .foregroundStyle(.white)
-        .coordinateSpace(name: "drop")
         .onPreferenceChange(DropFramesKey.self) { model.dropTargetFrames = $0 }
     }
 
@@ -163,7 +162,7 @@ struct DropTargetsView: View {
         .scaleEffect(hot ? 1.03 : 1)
         .animation(.nook, value: hot)
         .background(GeometryReader { g in
-            Color.clear.preference(key: DropFramesKey.self, value: [t: g.frame(in: .named("root"))])
+            Color.clear.preference(key: DropFramesKey.self, value: [t: g.frame(in: .global)])
         })
     }
 }

@@ -1,6 +1,6 @@
 # LosNotches
 
-A free, local, open alternative to NotchNook: turns the MacBook notch (or a slim handle on notch-less
+A free, local, open notch utility for macOS: turns the MacBook notch (or a slim handle on notch-less
 displays) into a Dynamic-Island-style surface. No accounts, no licence server, no network calls.
 
 **Features:** media controls for any Now Playing app (Music, Spotify, browsers…) with scrubber and

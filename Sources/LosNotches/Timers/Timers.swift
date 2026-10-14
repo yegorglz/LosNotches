@@ -10,6 +10,8 @@ final class TimersStore {
     @ObservationIgnored private let store: JSONFileStore<TimerBook>
     @ObservationIgnored private let activities: LiveActivityCenter
     @ObservationIgnored private var timer: Timer?
+    /// Entry shown by the "timer" activity; re-upserting every tick would always win ties over "timer-done".
+    @ObservationIgnored private var shownEntryID: UUID?
 
     init(directory: URL, activities: LiveActivityCenter) {
         store = JSONFileStore(url: directory.appendingPathComponent("timers.json")) { TimerBook() }
@@ -35,17 +37,22 @@ final class TimersStore {
 
     private func tick() {
         now = Date()
+        let soonest = book.soonestRunning(now: now)
+        if soonest?.id != shownEntryID {
+            shownEntryID = soonest?.id
+            if let soonest {
+                activities.upsert(LiveActivity(id: "timer", kind: .timer, revision: soonest.id.hashValue, peekText: soonest.label.isEmpty ? nil : soonest.label))
+            } else {
+                activities.remove(id: "timer")
+            }
+        }
+        // After the running update, so a finished timer's activity is the most recent and wins the tie.
         for done in book.collectFinished(now: now) {
             NSSound(named: "Glass")?.play()
             let text = done.label.isEmpty ? "Timer done" : "\(done.label) done"
             activities.upsert(LiveActivity(id: "timer-done:\(done.id)", kind: .timer, revision: 1, expiresAt: now + 8, peekText: text))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.activities.requestPeek(id: "timer-done:\(done.id)", seconds: 4) }
             save()
-        }
-        if let soonest = book.soonestRunning(now: now) {
-            activities.upsert(LiveActivity(id: "timer", kind: .timer, revision: soonest.id.hashValue, peekText: soonest.label.isEmpty ? nil : soonest.label))
-        } else {
-            activities.remove(id: "timer")
         }
         let running = book.soonestRunning(now: now) != nil
         if running, timer == nil {
@@ -181,7 +188,7 @@ struct TimerWing: View {
         let store = AppServices.shared.timers
         if side == .left {
             Image(systemName: activity.id.hasPrefix("timer-done") ? "bell.fill" : "timer").font(.system(size: 12)).foregroundStyle(.orange)
-        } else if let e = store.book.soonestRunning(now: store.now) {
+        } else if !activity.id.hasPrefix("timer-done"), let e = store.book.soonestRunning(now: store.now) {
             Text(DurationText.format(store.book.remaining(id: e.id, now: store.now)))
                 .font(.system(size: 12, weight: .semibold).monospacedDigit()).foregroundStyle(.orange)
         } else {

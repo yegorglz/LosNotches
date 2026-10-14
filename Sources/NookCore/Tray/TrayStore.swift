@@ -29,11 +29,15 @@ public final class TrayStore {
     private let bookmarking: FileBookmarking
     private let now: () -> Date
     private let store: JSONFileStore<[TrayItem]>
+    private let discard: (URL) throws -> Void
 
-    public init(directory: URL, bookmarking: FileBookmarking = SystemBookmarking(), now: @escaping () -> Date = Date.init) {
+    /// `discard` disposes of owned copies on removal; by default they go to the Trash (an ⌥-dragged file is the user's original).
+    public init(directory: URL, bookmarking: FileBookmarking = SystemBookmarking(), now: @escaping () -> Date = Date.init,
+                discard: @escaping (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) {
         self.directory = directory
         self.bookmarking = bookmarking
         self.now = now
+        self.discard = discard
         store = JSONFileStore(url: directory.appendingPathComponent("tray.json")) { [] }
         items = store.load()
         pruneMissing()
@@ -42,6 +46,7 @@ public final class TrayStore {
     @discardableResult
     public func add(_ urls: [URL], move: Bool) throws -> [TrayItem] {
         var added: [TrayItem] = []
+        defer { persist() } // keep files already handled even if a later one fails
         for url in urls {
             let path = url.resolvingSymlinksInPath().path
             if let i = items.firstIndex(where: { self.url(for: $0.id)?.resolvingSymlinksInPath().path == path }) {
@@ -56,12 +61,17 @@ public final class TrayStore {
                 target = try ownedFolder(id).appendingPathComponent(url.lastPathComponent)
                 try FileManager.default.moveItem(at: url, to: target)
             }
-            let item = TrayItem(id: id, bookmark: try bookmarking.bookmark(for: target), displayName: url.lastPathComponent,
-                                addedAt: now(), isOwnedCopy: move)
+            let bookmark: Data
+            do {
+                bookmark = try bookmarking.bookmark(for: target)
+            } catch {
+                if move { try? FileManager.default.moveItem(at: target, to: url) } // never orphan a moved file
+                throw error
+            }
+            let item = TrayItem(id: id, bookmark: bookmark, displayName: url.lastPathComponent, addedAt: now(), isOwnedCopy: move)
             items.insert(item, at: 0)
             added.append(item)
         }
-        persist()
         return added
     }
 
@@ -79,7 +89,11 @@ public final class TrayStore {
 
     public func remove(id: UUID) {
         guard let item = items.first(where: { $0.id == id }) else { return }
-        if item.isOwnedCopy { try? FileManager.default.removeItem(at: filesDir.appendingPathComponent(id.uuidString)) }
+        if item.isOwnedCopy {
+            let folder = filesDir.appendingPathComponent(id.uuidString)
+            if let file = bookmarking.resolve(item.bookmark) { try? discard(file) }
+            try? FileManager.default.removeItem(at: folder) // now-empty holder folder
+        }
         items.removeAll { $0.id == id }
         persist()
     }

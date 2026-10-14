@@ -32,6 +32,12 @@ final class LiveActivityCenter {
         return queue.current(now: Date(), isFullscreen: fullscreenDisplays.contains(displayID), settings: settings.settings.liveActivities)
     }
 
+    /// Whether an activity of `kind` could appear right now (ignoring other activities).
+    func canShow(_ kind: LiveActivityKind) -> Bool {
+        let s = settings.settings.liveActivities
+        return s.enabled && s.enabledKinds.contains(kind) && (fullscreenDisplays.isEmpty || s.visibleInFullscreen.contains(kind))
+    }
+
     func setFullscreen(_ on: Bool, displayID: UInt32) {
         if on { fullscreenDisplays.insert(displayID) } else { fullscreenDisplays.remove(displayID) }
     }

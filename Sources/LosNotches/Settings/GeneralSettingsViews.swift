@@ -8,7 +8,7 @@ struct GeneralSettingsView: View {
     var body: some View {
         let s = settingsBinding
         SettingsSection(title: "Startup") {
-            Toggle("Launch at login", isOn: Binding(get: { LoginItem.isEnabled || s.wrappedValue.general.launchAtLogin }, set: { on in
+            Toggle("Launch at login", isOn: Binding(get: { LoginItem.isEnabled }, set: { on in
                 do { try LoginItem.set(on); s.wrappedValue.general.launchAtLogin = on; loginError = nil }
                 catch { loginError = error.localizedDescription }
             }))

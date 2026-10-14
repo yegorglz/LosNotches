@@ -73,13 +73,14 @@ final class NotchViewModel {
         let old = state
         state = NotchReducer.reduce(state, e, InteractionPolicy(settings))
         if old.mode != state.mode { modeChanged(from: old.mode) }
-        if e == .hoverEntered, state.mode == .activity, settings.liveActivities.quickPeek { schedulePeek(after: 0.3, duration: nil) }
+        if e == .hoverEntered, state.mode == .activity, settings.liveActivities.quickPeek { schedulePeek(after: 0.3, duration: 2.5) }
     }
 
     private func modeChanged(from old: NotchMode) {
         panel?.allowsKey = state.mode == .open
         if old == .open {
             services.flushAll()
+            endTyping()
             if let panel, panel.isKeyWindow {
                 // Give keyboard focus back to the app the user was in.
                 panel.orderOut(nil)
@@ -105,16 +106,12 @@ final class NotchViewModel {
         schedulePeek(after: 0, duration: seconds)
     }
 
-    private func schedulePeek(after delay: TimeInterval, duration: TimeInterval?) {
+    private func schedulePeek(after delay: TimeInterval, duration: TimeInterval) {
         peekWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self, self.state.mode == .activity, self.activity?.peekText != nil else { return }
             self.send(.peek)
-            if let duration {
-                DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in
-                    if self?.state.isHovering == false { self?.send(.peekEnded) }
-                }
-            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in self?.send(.peekEnded) }
         }
         peekWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
@@ -139,6 +136,12 @@ final class NotchViewModel {
         }
     }
 
+    /// Drops text focus so "lock while typing" can't outlive the editing session.
+    func endTyping() {
+        if panel?.firstResponder is NSText { panel?.makeFirstResponder(nil) }
+        if state.isTyping { send(.typingChanged(false)) }
+    }
+
     func textFieldFocused(_ focused: Bool) {
         if focused { panel?.allowsKey = true; panel?.makeKey() }
         send(.typingChanged(focused))
@@ -153,7 +156,7 @@ final class NotchViewModel {
         else if event.phase.contains(.ended) || event.phase.contains(.cancelled) { phase = .ended }
         else { phase = .changed }
         let sign: CGFloat = event.isDirectionInvertedFromDevice ? 1 : -1
-        guard let g = scroll.ingest(fingerDX: -sign * event.scrollingDeltaX, fingerDY: sign * event.scrollingDeltaY, phase: phase) else { return }
+        guard let g = scroll.ingest(fingerDX: sign * event.scrollingDeltaX, fingerDY: sign * event.scrollingDeltaY, phase: phase) else { return }
         switch g {
         case .down: send(.swipeDown)
         case .up:

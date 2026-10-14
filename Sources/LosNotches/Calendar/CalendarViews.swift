@@ -10,7 +10,7 @@ struct CalendarWidgetView: View {
         if service.authorization != .authorized {
             VStack(spacing: 8) {
                 Image(systemName: "calendar.badge.exclamationmark").font(.system(size: 20)).opacity(0.6)
-                Text("This widget requires calendar permissions in order to show events.")
+                Text("This widget requires calendar permissions in order to show events, please enable access in settings.")
                     .font(.system(size: 10)).multilineTextAlignment(.center).opacity(0.6)
                 Button("Allow access") { Task { await service.requestAccess() } }.controlSize(.small)
             }

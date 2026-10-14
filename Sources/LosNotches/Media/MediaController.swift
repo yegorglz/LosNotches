@@ -36,20 +36,14 @@ final class MediaController {
         music.onUpdate = { [weak self] n in self?.snapshot.appleMusic = n; self?.recompute() }
         spotify.onUpdate = { [weak self] n in self?.snapshot.spotify = n; self?.recompute() }
         adapter?.start()
-        // AppleScript polling is only needed when the user pins a specific app.
-        observeChanges({ [settings] in _ = settings.settings.media.preferredSource }) { [weak self] in self?.applySourcePreference() }
-        applySourcePreference()
+        // Both poll at 1 Hz only while their app runs, so the source switcher can offer them.
+        music.start()
+        spotify.start()
+        observeChanges({ [settings] in _ = settings.settings.media.preferredSource }) { [weak self] in self?.recompute() }
         observeChanges({ [settings] in _ = settings.settings.liveActivities.inactivityTimeoutSeconds }) { [weak self] in self?.recompute() }
     }
 
     func stop() { adapter?.stop() }
-
-    private func applySourcePreference() {
-        let pref = settings.settings.media.preferredSource
-        if pref == .appleMusic { music.start() } else { music.stop(); snapshot.appleMusic = nil }
-        if pref == .spotify { spotify.start() } else { spotify.stop(); snapshot.spotify = nil }
-        recompute()
-    }
 
     private func recompute() {
         var n = MediaSourceSelector.select(snapshot, preference: settings.settings.media.preferredSource)

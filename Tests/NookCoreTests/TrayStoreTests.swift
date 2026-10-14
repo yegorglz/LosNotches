@@ -19,11 +19,30 @@ private func file(_ dir: URL, _ name: String, _ text: String = "hi") throws -> U
     #expect(store.url(for: item.id)?.path.contains("/Files/") == true && item.isOwnedCopy)
 }
 @Test func removeOwnedCopyDeletesFile() throws {
-    let root = tempDir(), store = TrayStore(directory: root)
+    var discarded: [String] = []
+    let root = tempDir(), store = TrayStore(directory: root, discard: { discarded.append($0.lastPathComponent); try FileManager.default.removeItem(at: $0) })
     let item = try store.add([try file(tempDir(), "a.txt")], move: true)[0]
     let u = store.url(for: item.id)!
     store.remove(id: item.id)
     #expect(!FileManager.default.fileExists(atPath: u.path) && store.items.isEmpty)
+    #expect(discarded == ["a.txt"])
+}
+
+struct FailingBookmarks: FileBookmarking {
+    struct Boom: Error {}
+    func bookmark(for url: URL) throws -> Data { throw Boom() }
+    func resolve(_ data: Data) -> URL? { nil }
+}
+@Test func failedBookmarkAfterMoveRestoresFile() throws {
+    let f = try file(tempDir(), "a.txt"), store = TrayStore(directory: tempDir(), bookmarking: FailingBookmarks())
+    #expect(throws: FailingBookmarks.Boom.self) { try store.add([f], move: true) }
+    #expect(FileManager.default.fileExists(atPath: f.path))
+}
+@Test func partialFailureKeepsEarlierItemsPersisted() throws {
+    let root = tempDir(), src = tempDir(), good = try file(src, "a.txt")
+    let missing = src.appendingPathComponent("gone.txt")
+    #expect(throws: (any Error).self) { try TrayStore(directory: root).add([good, missing], move: true) }
+    #expect(TrayStore(directory: root).items.map(\.displayName) == ["a.txt"])
 }
 @Test func removeReferenceKeepsOriginal() throws {
     let f = try file(tempDir(), "a.txt"), store = TrayStore(directory: tempDir())

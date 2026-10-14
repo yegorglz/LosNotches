@@ -14,6 +14,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         services = AppServices()
         AppServices.shared = services
         services.start()
+        if !services.settings.settings.general.onboardingCompleted {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in self?.services.windows.mainModel?.send(.click) }
+        }
         statusItem = StatusItemController(services: services)
         #if DEBUG
         installDebugHook()

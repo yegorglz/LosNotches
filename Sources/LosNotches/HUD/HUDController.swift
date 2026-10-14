@@ -19,6 +19,8 @@ final class HUDController {
     @ObservationIgnored private let suppressor = OSDSuppressor()
     @ObservationIgnored private var retryTimer: Timer?
     @ObservationIgnored private var ownChangeUntil = Date.distantPast
+    /// Keys whose last key-down we handled; only their key-up is swallowed.
+    @ObservationIgnored private var handledDown: Set<MediaKey> = []
 
     init(settings: SettingsStore, activities: LiveActivityCenter) {
         self.settings = settings
@@ -30,7 +32,10 @@ final class HUDController {
             MainActor.assumeIsolated { self?.handleKey(e, fine: fine) ?? false }
         }
         SystemVolume.observe { [weak self] in self?.externalVolumeChange() }
-        observeChanges({ [settings] in _ = settings.settings.liveActivities.hudReplacement }) { [weak self] in self?.apply() }
+        observeChanges({ [settings] in
+            let s = settings.settings.liveActivities
+            _ = (s.hudReplacement, s.enabled, s.enabledKinds)
+        }) { [weak self] in self?.apply() }
         apply()
     }
 
@@ -46,7 +51,9 @@ final class HUDController {
     }
 
     private func apply() {
-        let enabled = settings.settings.liveActivities.hudReplacement
+        let s = settings.settings.liveActivities
+        // Replacing the system HUD only makes sense when ours is allowed to appear.
+        let enabled = s.hudReplacement && s.enabled && s.enabledKinds.contains(.hud)
         let active = enabled && AXIsProcessTrusted() && tap.start()
         needsAccessibility = enabled && !active
         if HUDActivationPolicy.shouldSuspendOSD(replacementEnabled: enabled, tapActive: active) {
@@ -72,31 +79,35 @@ final class HUDController {
     }
 
     private func handleKey(_ e: MediaKeyEvent, fine: Bool) -> Bool {
-        guard settings.settings.liveActivities.hudReplacement else { return false }
+        guard [.soundUp, .soundDown, .mute, .brightnessUp, .brightnessDown].contains(e.key) else { return false }
+        if !e.isDown { return handledDown.remove(e.key) != nil }
+        let handled = settings.settings.liveActivities.hudReplacement && activities.canShow(.hud) && apply(e, fine: fine)
+        if handled { handledDown.insert(e.key) } else { handledDown.remove(e.key) }
+        return handled
+    }
+
+    /// Applies a key-down; false when the system should handle it instead.
+    private func apply(_ e: MediaKeyEvent, fine: Bool) -> Bool {
         switch e.key {
         case .soundUp, .soundDown:
             guard let cur = SystemVolume.get() else { return false }
-            if e.isDown {
-                let next = LevelStep.apply(current: cur, up: e.key == .soundUp, fine: fine)
-                guard SystemVolume.set(next) else { return false }
-                if SystemVolume.isMuted() == true { _ = SystemVolume.setMuted(false) }
-                show(.volume, next, muted: false)
-            }
+            let next = LevelStep.apply(current: cur, up: e.key == .soundUp, fine: fine)
+            guard SystemVolume.set(next) else { return false }
+            if SystemVolume.isMuted() == true { _ = SystemVolume.setMuted(false) }
+            show(.volume, next, muted: false)
             return true
         case .mute:
             guard let m = SystemVolume.isMuted() else { return false }
-            if e.isDown, !e.isRepeat {
+            if !e.isRepeat {
                 guard SystemVolume.setMuted(!m) else { return false }
                 show(.volume, SystemVolume.get() ?? 0, muted: !m)
             }
             return true
         case .brightnessUp, .brightnessDown:
             guard let cur = DisplayBrightness.get() else { return false }
-            if e.isDown {
-                let next = LevelStep.apply(current: cur, up: e.key == .brightnessUp, fine: fine)
-                guard DisplayBrightness.set(next) else { return false }
-                show(.brightness, next, muted: false)
-            }
+            let next = LevelStep.apply(current: cur, up: e.key == .brightnessUp, fine: fine)
+            guard DisplayBrightness.set(next) else { return false }
+            show(.brightness, next, muted: false)
             return true
         default:
             return false
@@ -104,7 +115,7 @@ final class HUDController {
     }
 
     private func externalVolumeChange() {
-        guard settings.settings.liveActivities.hudReplacement, tap.isActive, Date() > ownChangeUntil else { return }
+        guard settings.settings.liveActivities.hudReplacement, tap.isActive, activities.canShow(.hud), Date() > ownChangeUntil else { return }
         show(.volume, SystemVolume.get() ?? 0, muted: SystemVolume.isMuted() ?? false, own: false)
     }
 

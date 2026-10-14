@@ -66,6 +66,12 @@ final class ScreenWindowManager {
         panels[m.displayID] = panel
         let id = m.displayID
         model.syncActivity()
-        observeChanges({ [services] in _ = services.activities.current(for: id) }) { [weak model] in model?.syncActivity() }
+        observeChanges({ [services] in _ = services.activities.current(for: id) }, while: { [weak model] in model != nil }) { [weak model] in
+            model?.syncActivity()
+        }
+        // Typing focus ends when the user clicks into another app.
+        NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: panel, queue: .main) { [weak model] _ in
+            MainActor.assumeIsolated { model?.endTyping() }
+        }
     }
 }
