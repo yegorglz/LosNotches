@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>LosNotches</string>
+	<key>CFBundleIdentifier</key>
+	<string>dev.losnotches.LosNotches</string>
+	<key>CFBundleName</key>
+	<string>LosNotches</string>
+	<key>CFBundleDisplayName</key>
+	<string>LosNotches</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.6</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>LosNotches uses Apple Events to show and control what's playing in Music and Spotify.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>LosNotches shows your Bluetooth devices when they connect or disconnect.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>LosNotches shows your upcoming events in the calendar widget and live activity.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>LosNotches uses the camera only for the Mirror widget.</string>
+</dict>
+</plist>
