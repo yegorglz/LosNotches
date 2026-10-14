@@ -47,4 +47,9 @@ build_binary
 [ -x scripts/build-adapter.sh ] && build_adapter
 assemble_bundle
 sign_bundle
+if [ "$CONFIG" = release ]; then
+  VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Resources/Info.plist)
+  ditto -c -k --keepParent "$APP" "build/LosNotches-$VERSION.zip"
+  echo "zipped build/LosNotches-$VERSION.zip"
+fi
 echo "built $APP"

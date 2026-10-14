@@ -5,7 +5,7 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class BluetoothMonitor: NSObject {
+final class BluetoothMonitor: NSObject, CBCentralManagerDelegate {
     private(set) var lastName = ""
     private(set) var lastKind = BluetoothDeviceKind.other
     private(set) var lastConnected = true
@@ -13,14 +13,33 @@ final class BluetoothMonitor: NSObject {
     @ObservationIgnored private var startedAt = Date()
     @ObservationIgnored private var connectNote: IOBluetoothUserNotification?
     @ObservationIgnored private var disconnectNotes: [String: IOBluetoothUserNotification] = [:]
+    @ObservationIgnored private var central: CBCentralManager?
+    @ObservationIgnored private var started = false
 
     init(activities: LiveActivityCenter) {
         self.activities = activities
         super.init()
     }
 
+    /// IOBluetooth blocks the calling thread while the Bluetooth permission prompt is pending,
+    /// so it is only touched once CoreBluetooth reports access (the prompt itself is async).
     func start() {
-        guard CBCentralManager.authorization != .denied, CBCentralManager.authorization != .restricted else { return }
+        switch CBCentralManager.authorization {
+        case .allowedAlways: startWatching()
+        case .notDetermined: central = CBCentralManager(delegate: self, queue: .main)
+        default: return
+        }
+    }
+
+    nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        MainActor.assumeIsolated {
+            if CBCentralManager.authorization == .allowedAlways { startWatching() }
+        }
+    }
+
+    private func startWatching() {
+        guard !started else { return }
+        started = true
         startedAt = Date()
         for d in (IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] ?? []) where d.isConnected() { watchDisconnect(d) }
         connectNote = IOBluetoothDevice.register(forConnectNotifications: self, selector: #selector(connected(_:device:)))

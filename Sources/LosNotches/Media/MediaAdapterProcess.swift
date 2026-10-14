@@ -23,13 +23,19 @@ final class MediaAdapterProcess {
     }
 
     func start() {
-        queue.async { self.stopped = false; self.launch() }
+        queue.async {
+            // Clear orphans from a previous run that crashed (children outlive a crashed parent).
+            SystemProcessRunner().run("/usr/bin/pkill", ["-9", "-f", self.scriptURL.path])
+            self.stopped = false
+            self.launch()
+        }
     }
 
+    /// SIGKILL: the child inherits our ignored SIGTERM (see AppDelegate signal handlers), so terminate() won't do.
     func stop() {
         queue.sync {
             stopped = true
-            process?.terminate()
+            if let p = process, p.isRunning { kill(p.processIdentifier, SIGKILL) }
             process = nil
         }
     }
