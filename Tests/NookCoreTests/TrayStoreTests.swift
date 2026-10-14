@@ -28,6 +28,15 @@ private func file(_ dir: URL, _ name: String, _ text: String = "hi") throws -> U
     #expect(discarded == ["a.txt"])
 }
 
+@Test func failedDiscardKeepsOwnedFileAndItem() throws {
+    struct NoTrash: Error {}
+    let store = TrayStore(directory: tempDir(), discard: { _ in throw NoTrash() })
+    let item = try store.add([try file(tempDir(), "a.txt")], move: true)[0]
+    let u = store.url(for: item.id)!
+    store.remove(id: item.id)
+    #expect(FileManager.default.fileExists(atPath: u.path) && store.items.count == 1)
+}
+
 struct FailingBookmarks: FileBookmarking {
     struct Boom: Error {}
     func bookmark(for url: URL) throws -> Data { throw Boom() }

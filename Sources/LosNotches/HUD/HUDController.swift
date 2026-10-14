@@ -34,7 +34,7 @@ final class HUDController {
         SystemVolume.observe { [weak self] in self?.externalVolumeChange() }
         observeChanges({ [settings] in
             let s = settings.settings.liveActivities
-            _ = (s.hudReplacement, s.enabled, s.enabledKinds)
+            _ = (s.hudReplacement, s.enabled, s.enabledKinds, s.visibleInFullscreen)
         }) { [weak self] in self?.apply() }
         apply()
     }
@@ -50,10 +50,13 @@ final class HUDController {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
 
+    /// Re-evaluates OSD suppression (e.g. after a fullscreen change).
+    func refresh() { apply() }
+
     private func apply() {
         let s = settings.settings.liveActivities
         // Replacing the system HUD only makes sense when ours is allowed to appear.
-        let enabled = s.hudReplacement && s.enabled && s.enabledKinds.contains(.hud)
+        let enabled = s.hudReplacement && activities.canShow(.hud)
         let active = enabled && AXIsProcessTrusted() && tap.start()
         needsAccessibility = enabled && !active
         if HUDActivationPolicy.shouldSuspendOSD(replacementEnabled: enabled, tapActive: active) {

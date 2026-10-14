@@ -15,6 +15,7 @@ final class NotchViewModel {
     @ObservationIgnored let services: AppServices
     @ObservationIgnored private var exitWork: DispatchWorkItem?
     @ObservationIgnored private var peekWork: DispatchWorkItem?
+    @ObservationIgnored private var peekEndWork: DispatchWorkItem?
     @ObservationIgnored private var scroll = ScrollGestureAccumulator()
 
     init(metrics: ScreenMetrics, services: AppServices) {
@@ -87,7 +88,7 @@ final class NotchViewModel {
                 panel.orderFrontRegardless()
             }
         }
-        if state.mode != .peek { peekWork?.cancel() }
+        if state.mode != .peek { peekWork?.cancel(); peekEndWork?.cancel() }
     }
 
     @ObservationIgnored private var lastActivityID: String?
@@ -108,10 +109,13 @@ final class NotchViewModel {
 
     private func schedulePeek(after delay: TimeInterval, duration: TimeInterval) {
         peekWork?.cancel()
+        peekEndWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self, self.state.mode == .activity, self.activity?.peekText != nil else { return }
             self.send(.peek)
-            DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in self?.send(.peekEnded) }
+            let end = DispatchWorkItem { [weak self] in self?.send(.peekEnded) }
+            self.peekEndWork = end
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: end)
         }
         peekWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)

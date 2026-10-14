@@ -16,7 +16,7 @@ Requires macOS 14.6+, Apple silicon or Intel.
 | Permission | Used for |
 |---|---|
 | Accessibility | Volume & brightness HUD replacement (intercepts the media keys). Optional, off by default. |
-| Automation | Controlling Music / Spotify when you pin one as the media source. Asked on first use. |
+| Automation | Reading and controlling Music / Spotify while they run (lets you switch sources). Asked the first time either app is open. |
 | Calendar | Calendar widget and calendar live activity. |
 | Camera | Mirror widget only; the camera runs only while the Mirror is on screen. |
 | Bluetooth | Connect / disconnect live activity. |

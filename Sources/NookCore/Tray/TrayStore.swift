@@ -91,8 +91,13 @@ public final class TrayStore {
         guard let item = items.first(where: { $0.id == id }) else { return }
         if item.isOwnedCopy {
             let folder = filesDir.appendingPathComponent(id.uuidString)
-            if let file = bookmarking.resolve(item.bookmark) { try? discard(file) }
-            try? FileManager.default.removeItem(at: folder) // now-empty holder folder
+            // Only dispose of a file still inside its holder; if that fails, keep everything (it's the user's original).
+            if let file = bookmarking.resolve(item.bookmark), file.resolvingSymlinksInPath().path.hasPrefix(folder.resolvingSymlinksInPath().path) {
+                do { try discard(file) } catch { return }
+            }
+            if (try? FileManager.default.contentsOfDirectory(atPath: folder.path))?.isEmpty ?? true {
+                try? FileManager.default.removeItem(at: folder)
+            }
         }
         items.removeAll { $0.id == id }
         persist()

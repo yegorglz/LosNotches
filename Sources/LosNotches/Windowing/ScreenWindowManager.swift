@@ -33,6 +33,7 @@ final class ScreenWindowManager {
     func setFullscreen(_ isFullscreen: Bool, displayID: UInt32) {
         services.activities.setFullscreen(isFullscreen, displayID: displayID)
         viewModels[displayID]?.send(.fullscreenChanged(isFullscreen))
+        services.hud.refresh()
     }
 
     func rebuild(force: Bool = false) {
