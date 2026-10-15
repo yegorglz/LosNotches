@@ -1,67 +1,152 @@
-# LosNotches
+<p align="center">
+  <img src="docs/icon.png" width="160" alt="LosNotches icon: a black notch eclipsing a burning sun">
+</p>
 
-A free, local, open notch utility for macOS: turns the MacBook notch (or a slim handle on notch-less
-displays) into a Dynamic-Island-style surface. No accounts, no licence server, no network calls.
+<h1 align="center">LosNotches</h1>
 
-**Features:** media controls for any Now Playing app (Music, Spotify, browsers…) with scrubber and
-source switching · live activities (media, volume/brightness HUD, battery, Bluetooth, calendar,
-timers, tray) with Quick Peek · calendar with Zoom/Meet/Teams/Webex join buttons · notes (rich text +
-code mode) · to-dos (stars, auto-archive) · timers (wheels, labels, haptics, survive restarts) · file
-Tray tab + AirDrop drop targets (files, images, links, text; Quick Look thumbnails) · camera Mirror ·
-Shortcuts · Quick Apps · fullscreen detection · multi-display · waves / spectrograph / circle effects ·
-interactive peeks (media + timer controls) · fully adjustable look (Settings → Appearance: corner radii,
-island border, widget cards, translucent blurred Nook, shadow, Liquid Glass buttons on macOS 26).
+<p align="center">
+  Your MacBook's notch has been dead space since 2021. LosNotches puts it to work.<br>
+  Free, open source, and it never talks to the internet.
+</p>
 
-Requires macOS 14.6+, Apple silicon or Intel.
+<p align="center">
+  <img src="docs/screenshots/nook.png" width="760" alt="The open Nook: timer wheels and a to-do list hanging from the notch">
+</p>
+
+---
+
+Hover over the notch and click it. A panel slides out of it, and that panel is the **Nook**. It holds whatever
+widgets you pick: what's playing, your next meeting, a quick note, a timer, the files you're juggling. Move the
+pointer away and it tucks itself back into the notch.
+
+While the Nook is closed, the notch still shows small **live activities** on either side of the camera. You see
+album art while music plays, a countdown while a timer runs, and a glow when you plug in the charger. Hover one to
+peek at the details. Swipe up to dismiss it.
+
+Macs without a notch get a slim handle at the top of the screen that opens the same Nook. You can also have it draw
+a fake notch.
+
+## What's in the Nook
+
+- **Now Playing**: Spotify, Apple Music, browsers, podcasts, anything macOS shows as Now Playing. Album art, a
+  scrubber you can drag, and a switcher for when two apps are playing at once. Swipe sideways on the notch to skip
+  tracks.
+- **Calendar**: today and the days around it. Meetings with a Zoom, Google Meet, Teams or Webex link get a
+  one-click Join button. Click an event to open it in Calendar.
+- **Notes**: as many notes as you like, with bold, italic and underline. A code mode switches to monospace.
+- **To-dos**: star the important ones. Done items tidy themselves away after a day.
+- **Timers**: spin the wheels or tap a preset, then name the timer if you want. Several can run at once, and
+  they keep counting through a restart.
+- **Tray**: drag files onto the notch to park them there, or drop them on AirDrop to send them. Hold ⌥ to move
+  instead of reference. Images, links and text from your browser work too, and ⌘V pastes.
+- **Mirror**: a quick look at yourself before a call. The camera runs only while the Mirror is on screen.
+- **Shortcuts and Quick Apps**: your favourite Shortcuts and apps, one click away.
+
+## Live activities
+
+Media, volume and brightness, battery (plugged in, unplugged, full, low), Bluetooth devices connecting,
+upcoming meetings, running timers, and files in the tray. Each one can be switched off, and you choose which ones
+may still show over fullscreen apps.
+
+**Volume & brightness HUD.** LosNotches can replace the big grey macOS volume and brightness overlay with a slim
+bar in the notch. It's off by default, because it needs the Accessibility permission to catch the keys.
+
+## Make it yours
+
+The **Appearance** settings let you change the island's corner radii and how its edges flare into the bezel.
+You can give it a coloured border, turn the open Nook into blurred glass, and style every widget as a card with
+its own radius, fill and outline. Widgets can be reordered and resized on a 12-cell grid. Media can show waves,
+a spectrograph, pulsing circles, or nothing.
+
+## Install
+
+Grab `LosNotches-<version>.zip` from [Releases](../../releases), unzip it, and drag **LosNotches.app** into
+Applications.
+
+The app isn't notarized, so macOS blocks it the first time you open it. Right-click it and choose **Open**, or
+go to **System Settings → Privacy & Security** and click **Open Anyway**. You only have to do this once.
+
+Requires macOS 14.6 or later. Runs on Apple silicon and Intel.
 
 ## Permissions
 
-| Permission | Used for |
+LosNotches asks only for what each feature needs, and you can skip any of them. The feature just stays off.
+
+| Permission | Why |
 |---|---|
-| Accessibility | Volume & brightness HUD replacement (intercepts the media keys). Optional, off by default. |
-| Automation | Reading and controlling Music / Spotify while they run (lets you switch sources). Asked the first time either app is open. |
-| Calendar | Calendar widget and calendar live activity. |
-| Camera | Mirror widget only; the camera runs only while the Mirror is on screen. |
-| Bluetooth | Connect / disconnect live activity. |
+| Calendar | To show your events and meeting reminders. |
+| Camera | For the Mirror widget. It's never on unless the Mirror is visible. |
+| Bluetooth | To show when headphones, mice and keyboards connect. |
+| Automation | To control Music and Spotify directly. macOS asks the first time either app is open. |
+| Accessibility | Only for the volume & brightness HUD replacement, which is off by default. |
 
-No Screen Recording, Full Disk Access or Input Monitoring is needed. The app is not sandboxed: it runs
-`/usr/bin/perl` with the bundled mediaremote-adapter (the only way to read Now Playing on macOS 15.4+)
-and freezes/thaws `OSDUIHelper` for the HUD replacement (always restored on quit, and at next launch
-after a crash). The island lives in a private SkyLight space above all Spaces so it doesn't slide during
-Space switches (same technique as boring.notch; if macOS refuses it, the island falls back to normal Spaces).
+It doesn't need Screen Recording, Full Disk Access or Input Monitoring. There's no account, no analytics and no
+network access. Your notes, to-dos, timers and tray live in `~/Library/Application Support/LosNotches` and
+nowhere else.
 
-## Build, test, run
+## Build it yourself
 
-Works with the Command Line Tools alone (no Xcode needed).
+You need Xcode or just the Command Line Tools (`xcode-select --install`). There are no package dependencies.
 
 ```bash
-scripts/test.sh                 # unit tests (NookCore)
-scripts/run.sh                  # debug build + launch
-scripts/build-app.sh release    # universal build/LosNotches.app + build/LosNotches-<version>.zip
+git clone https://github.com/<you>/LosNotches.git
 ```
 
-### Signing
+```bash
+cd LosNotches
+```
 
-Builds are signed ad-hoc by default. macOS ties permission grants to the signature, so **every
-rebuild resets Accessibility/Bluetooth/Camera grants**. For stable grants, create a self-signed
-code-signing certificate named "LosNotches Dev" (Keychain Access → Certificate Assistant → Create a
-Certificate → Code Signing) and build with:
+```bash
+scripts/run.sh
+```
+
+| Command | What it does |
+|---|---|
+| `scripts/run.sh` | Debug build, then launch |
+| `scripts/test.sh` | Run the unit tests |
+| `scripts/build-app.sh release` | Universal `build/LosNotches.app` plus a zip for Releases |
+| `scripts/icon/make-icns.sh` | Re-render the app icon from `scripts/icon/render-icon.swift` |
+
+**Keep your permissions between builds.** macOS remembers permissions per code signature, and local builds are
+signed ad hoc, so every rebuild forgets Accessibility, Camera and the rest. To avoid that, create a self-signed
+code-signing certificate called "LosNotches Dev" (Keychain Access → Certificate Assistant → Create a
+Certificate, type *Code Signing*), then build with:
 
 ```bash
 LOSNOTCHES_SIGN_ID="LosNotches Dev" scripts/build-app.sh release
 ```
 
-## Using it
+## How it works
 
-Hover the notch, click (or two-finger swipe down) to open the Nook. Swipe up to close; swipe up on a
-closed notch to hide it, down to bring it back. Swipe up on a live activity to dismiss it. Drag files
-onto the notch for the Tray / AirDrop targets (⌥ moves instead of referencing). Right-click for
-Settings. Horizontal swipes skip tracks.
+The app is two Swift targets.
 
-## Data and uninstall
+- **`NookCore`** holds every decision that can be tested without a screen: notch geometry, the open/close state
+  machine, which live activity wins, the media stream decoder, file stores, calendar rules, battery transitions.
+  It has 150+ unit tests.
+- **`LosNotches`** is the AppKit and SwiftUI app around it. It has one borderless panel per display, plus the
+  system integrations.
 
-Data lives in `~/Library/Application Support/LosNotches/` (notes, to-dos, timers, tray). To remove
-everything:
+A few parts are less obvious:
+
+- **Now Playing.** Since macOS 15.4, apps can't read Now Playing info directly. LosNotches bundles
+  [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter), which runs through the system's own
+  `/usr/bin/perl`, the same approach other notch apps use.
+- **Staying in place.** The island sits in its own private window space above every desktop. That keeps it
+  welded to the notch while you swipe between Spaces instead of sliding along with them.
+- **The HUD.** While the replacement is on, LosNotches pauses the system's `OSDUIHelper`. It always resumes it
+  when you quit, and again at the next launch if the app ever crashed.
+
+## Known limits
+
+- The spectrograph and circle effects follow the beat of time, not your actual audio.
+- Brightness keys control the built-in display only.
+- Some of this was built on private macOS APIs (Now Playing, display brightness, the window space). A future
+  macOS update could break them. When that happens LosNotches falls back gracefully, but the feature stops working.
+
+## Uninstall
+
+Quit LosNotches from its menu bar icon, then drag the app to the Trash. To remove its data and permissions as
+well:
 
 ```bash
 rm -rf ~/Library/Application\ Support/LosNotches
@@ -75,14 +160,12 @@ defaults delete dev.losnotches.LosNotches
 tccutil reset All dev.losnotches.LosNotches
 ```
 
-## Layout
-
-- `Sources/NookCore` — all decision logic (geometry, state reducer, activity arbitration, decoders,
-  stores, policies). Foundation/CoreGraphics only, fully unit-tested.
-- `Sources/LosNotches` — AppKit/SwiftUI app and system adapters.
-- `Vendor/mediaremote-adapter` — pinned upstream (see `VERSION`), built by `scripts/build-adapter.sh`.
-
 ## Credits
 
-Now Playing via [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter) © Jonas van den
-Berg and contributors, BSD-3-Clause (`Vendor/mediaremote-adapter/LICENSE`).
+Now Playing support comes from [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter) by Jonas van
+den Berg and contributors (BSD-3-Clause, see `Vendor/mediaremote-adapter/LICENSE`). The private-space technique
+was learned from [boring.notch](https://github.com/TheBoredTeam/boring.notch).
+
+## License
+
+[MIT](LICENSE)

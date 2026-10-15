@@ -58,6 +58,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 case "tab": m?.tab = parts.last == "tray" ? .tray : .nook
                 case "effect": s.settings.settings.media.effect = MediaEffect(rawValue: parts.last ?? "") ?? .waves
                 case "translucent": s.settings.settings.appearance.translucentBackground = parts.last == "on"
+                case "todo": s.todos.mutate { $0.add(title: parts.dropFirst().joined(separator: ":"), now: Date()) }
+                case "todostar", "tododone", "todoclear":
+                    let title = parts.dropFirst().joined(separator: ":")
+                    s.todos.mutate { list in
+                        guard let item = list.items.first(where: { $0.title == title }) else { return }
+                        switch parts[0] {
+                        case "todostar": list.toggleStar(id: item.id)
+                        case "tododone": list.toggleComplete(id: item.id, now: Date())
+                        default: list.delete(id: item.id)
+                        }
+                    }
                 case "onboarding": s.settings.settings.general.onboardingCompleted = parts.last == "done"
                 case "widgets":
                     s.settings.settings.nook.widgets = parts.dropFirst().compactMap { p in
