@@ -89,7 +89,7 @@ nowhere else.
 You need Xcode or just the Command Line Tools (`xcode-select --install`). There are no package dependencies.
 
 ```bash
-git clone https://github.com/<you>/LosNotches.git
+git clone https://github.com/yegorglz/LosNotches.git
 ```
 
 ```bash
