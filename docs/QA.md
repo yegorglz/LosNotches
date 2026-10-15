@@ -43,4 +43,4 @@ Verification method: screenshots driven by a DEBUG-only distributed-notification
 
 ## Robustness
 - ✅ Launch never blocks on the Bluetooth permission prompt (IOBluetooth only after CoreBluetooth reports access)
-- ✅ 153 unit tests pass (`scripts/test.sh`)
+- ✅ 154 unit tests pass (`scripts/test.sh`)

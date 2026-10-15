@@ -61,8 +61,11 @@ struct PeekControls: View {
                 Button { media.send(.next) } label: { Image(systemName: "forward.fill") }
             case .timer where activity.id == "timer":
                 let store = AppServices.shared.timers
-                if let e = store.book.soonestRunning(now: store.now) {
-                    Button { store.mutate { $0.pause(id: e.id, now: Date()) } } label: { Image(systemName: "pause.fill") }
+                if let e = store.book.displayed(now: store.now) {
+                    let paused = if case .paused = e.state { true } else { false }
+                    Button { store.mutate { paused ? $0.resume(id: e.id, now: Date()) : $0.pause(id: e.id, now: Date()) } } label: {
+                        Image(systemName: paused ? "play.fill" : "pause.fill")
+                    }
                     Button { store.mutate { $0.cancel(id: e.id) } } label: { Image(systemName: "xmark") }
                 }
             default:

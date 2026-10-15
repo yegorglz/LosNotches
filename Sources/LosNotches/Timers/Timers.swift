@@ -37,11 +37,12 @@ final class TimersStore {
 
     private func tick() {
         now = Date()
-        let soonest = book.soonestRunning(now: now)
+        let soonest = book.displayed(now: now)
         if soonest?.id != shownEntryID {
             shownEntryID = soonest?.id
             if let soonest {
-                activities.upsert(LiveActivity(id: "timer", kind: .timer, revision: soonest.id.hashValue, peekText: soonest.label.isEmpty ? nil : soonest.label))
+                // Peek text is required for hover peeks (and their controls), so unlabeled timers get one too.
+                activities.upsert(LiveActivity(id: "timer", kind: .timer, revision: soonest.id.hashValue, peekText: soonest.label.isEmpty ? "Timer" : soonest.label))
             } else {
                 activities.remove(id: "timer")
             }
@@ -90,6 +91,7 @@ struct TimerWidgetView: View {
                     WheelPicker(value: $s, range: 0...59, unit: "s")
                 }
                 .frame(height: 66)
+                .background(Color.clear.frame(height: 24).nookGlass(round: true).opacity(0.6)) // focus pill behind the selected row
                 HStack(spacing: 4) {
                     ForEach(TimerWheel.presets, id: \.self) { p in
                         Button("\(Int(p / 60))m") { (h, m, s) = TimerWheel.components(p) }
@@ -131,7 +133,10 @@ struct TimerRow: View {
             }
             .frame(width: 22, height: 22)
             .animation(.linear(duration: 1), value: remaining)
-            Text(DurationText.format(remaining)).font(.system(size: 15, weight: .semibold).monospacedDigit())
+            VStack(alignment: .leading, spacing: 0) {
+                Text(DurationText.format(remaining)).font(.system(size: 15, weight: .semibold).monospacedDigit())
+                if !entry.label.isEmpty { Text(entry.label).font(.system(size: 9)).opacity(0.55).lineLimit(1) }
+            }
             Spacer(minLength: 0)
             Button { store.mutate { paused ? $0.resume(id: entry.id, now: Date()) : $0.pause(id: entry.id, now: Date()) } } label: {
                 Image(systemName: paused ? "play.fill" : "pause.fill")
@@ -197,7 +202,7 @@ struct TimerWing: View {
         let store = AppServices.shared.timers
         if side == .left {
             Image(systemName: activity.id.hasPrefix("timer-done") ? "bell.fill" : "timer").font(.system(size: 12)).foregroundStyle(.orange)
-        } else if !activity.id.hasPrefix("timer-done"), let e = store.book.soonestRunning(now: store.now) {
+        } else if !activity.id.hasPrefix("timer-done"), let e = store.book.displayed(now: store.now) {
             Text(DurationText.format(store.book.remaining(id: e.id, now: store.now)))
                 .font(.system(size: 12, weight: .semibold).monospacedDigit()).foregroundStyle(.orange)
         } else {

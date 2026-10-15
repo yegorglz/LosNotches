@@ -73,6 +73,11 @@ private let t0 = Date(timeIntervalSince1970: 1_000_000)
     #expect(DurationText.format(0.2) == "0:01")
     #expect(DurationText.format(-5) == "0:00")
 }
+@Test func displayedFallsBackToPaused() {
+    var b = TimerBook(); let e = b.start(duration: 60, label: "x", now: t0)!
+    b.pause(id: e.id, now: t0 + 5)
+    #expect(b.soonestRunning(now: t0 + 5) == nil && b.displayed(now: t0 + 5)?.id == e.id)
+}
 @Test func soonestRunningPicksEarliestEnd() {
     var b = TimerBook(); b.start(duration: 100, label: "long", now: t0); b.start(duration: 10, label: "short", now: t0)
     #expect(b.soonestRunning(now: t0)?.label == "short")

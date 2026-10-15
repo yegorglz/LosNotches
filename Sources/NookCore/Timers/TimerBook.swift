@@ -65,6 +65,11 @@ public struct TimerBook: Codable, Equatable, Sendable {
         }.min { $0.1 < $1.1 }?.0
     }
 
+    /// The timer the notch shows: soonest running, else a paused one (so it can be resumed from the notch).
+    public func displayed(now: Date) -> TimerEntry? {
+        soonestRunning(now: now) ?? entries.first { if case .paused = $0.state { true } else { false } }
+    }
+
     private mutating func update(_ id: UUID, _ f: (inout TimerEntry) -> Void) {
         if let i = entries.firstIndex(where: { $0.id == id }) { f(&entries[i]) }
     }

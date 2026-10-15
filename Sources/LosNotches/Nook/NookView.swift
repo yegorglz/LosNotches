@@ -75,6 +75,7 @@ struct NookButtonStyle: ButtonStyle {
         configuration.label
             .padding(.horizontal, 7).padding(.vertical, 4)
             .nookGlass(round: AppServices.shared.settings.settings.general.preferRoundButtons)
+            .brightness(configuration.isPressed ? 0.15 : 0)
             .scaleEffect(configuration.isPressed ? 0.94 : 1)
     }
 }

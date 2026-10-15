@@ -117,7 +117,12 @@ final class NotchViewModel {
         let work = DispatchWorkItem { [weak self] in
             guard let self, self.state.mode == .activity, self.activity?.peekText != nil else { return }
             self.send(.peek)
-            let end = DispatchWorkItem { [weak self] in self?.send(.peekEnded) }
+            let end = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                // Interactive peeks stay while the pointer is on them (hover exit ends them via the reducer).
+                if self.state.isHovering, self.settings.liveActivities.interactive { return }
+                self.send(.peekEnded)
+            }
             self.peekEndWork = end
             DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: end)
         }
@@ -201,7 +206,11 @@ final class NotchViewModel {
             guard !items.isEmpty else { return false }
             services.tray.share(items)
         } else {
-            if urls.isEmpty { services.tray.paste(from: pb) } else { services.tray.add(urls, move: NSEvent.modifierFlags.contains(.option)) }
+            if urls.isEmpty {
+                guard services.tray.paste(from: pb) else { return false } // nothing readable: don't flip to an empty Tray
+            } else {
+                services.tray.add(urls, move: NSEvent.modifierFlags.contains(.option))
+            }
             tab = .tray
         }
         return true

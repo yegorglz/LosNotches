@@ -9,6 +9,7 @@ import UniformTypeIdentifiers
 final class TrayService {
     private(set) var items: [TrayItem] = []
     private(set) var thumbnails: [UUID: NSImage] = [:]
+    @ObservationIgnored private var thumbnailRequested: Set<UUID> = [] // in-flight or failed: never re-ask Quick Look
     @ObservationIgnored private let store: TrayStore
     @ObservationIgnored private let activities: LiveActivityCenter
 
@@ -45,36 +46,44 @@ final class TrayService {
     /// Quick Look thumbnail (images, PDFs, video…), generated once per item; nil until ready.
     func thumbnail(for item: TrayItem) -> NSImage? {
         if let t = thumbnails[item.id] { return t }
-        guard let url = url(for: item) else { return nil }
+        guard !thumbnailRequested.contains(item.id), let url = url(for: item) else { return nil }
+        thumbnailRequested.insert(item.id)
         let request = QLThumbnailGenerator.Request(fileAt: url, size: CGSize(width: 72, height: 72),
                                                    scale: NSScreen.main?.backingScaleFactor ?? 2, representationTypes: .thumbnail)
         QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { rep, _ in
             guard let image = rep?.nsImage else { return }
-            DispatchQueue.main.async { self.thumbnails[item.id] = image }
+            DispatchQueue.main.async { if self.items.contains(where: { $0.id == item.id }) { self.thumbnails[item.id] = image } }
         }
         return nil
     }
 
-    /// ⌘V: file URLs, else an image (PNG), else text.
-    func paste(from pb: NSPasteboard = .general) {
+    /// ⌘V / drops: file URLs, else a link (.webloc), else an image (PNG), else text. Returns whether anything was added.
+    @discardableResult
+    func paste(from pb: NSPasteboard = .general) -> Bool {
+        let before = items.count
         if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
             add(urls, move: false)
-            return
+            return true // re-adding an existing file just bumps it to the front
         }
         let stamp = Date().formatted(.verbatim("\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)).\(minute: .twoDigits).\(second: .twoDigits)", timeZone: .current, calendar: .current))
-        if let image = NSImage(pasteboard: pb), let tiff = image.tiffRepresentation,
+        if let link = (pb.readObjects(forClasses: [NSURL.self]) as? [URL])?.first(where: { !$0.isFileURL }),
+           let data = try? PropertyListSerialization.data(fromPropertyList: ["URL": link.absoluteString], format: .xml, options: 0) {
+            _ = try? store.addData(data, suggestedName: "\(link.host ?? "Link") \(stamp).webloc")
+        } else if let image = NSImage(pasteboard: pb), let tiff = image.tiffRepresentation,
            let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
             _ = try? store.addData(png, suggestedName: "Pasted \(stamp).png")
         } else if let text = pb.string(forType: .string) {
             _ = try? store.addData(Data(text.utf8), suggestedName: "Pasted \(stamp).txt")
         }
         sync()
+        return items.count > before
     }
 
     private func sync() {
         store.pruneMissing()
         items = store.items
         thumbnails = thumbnails.filter { id, _ in items.contains { $0.id == id } }
+        thumbnailRequested = thumbnailRequested.filter { id in items.contains { $0.id == id } }
         updateActivity()
     }
 

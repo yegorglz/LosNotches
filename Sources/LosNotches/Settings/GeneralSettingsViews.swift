@@ -149,8 +149,7 @@ struct NookSettingsView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .scrollDisabled(true)
-            .frame(height: CGFloat(s.wrappedValue.nook.widgets.count) * 32 + 4)
+            .frame(minHeight: CGFloat(s.wrappedValue.nook.widgets.count) * 36)
             Text("Drag rows to reorder.").font(.caption).foregroundStyle(.secondary)
             let missing = WidgetKind.allCases.filter { k in !s.wrappedValue.nook.widgets.contains { $0.kind == k } }
             if !missing.isEmpty {

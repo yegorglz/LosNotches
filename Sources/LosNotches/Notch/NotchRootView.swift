@@ -8,7 +8,7 @@ struct NotchRootView: View {
     private var look: AppearanceSettings { model.settings.appearance }
     private var topRadius: CGFloat { look.flareRadius + (mode == .open ? 4 : 0) }
     private var bottomRadius: CGFloat { mode == .open ? look.openCornerRadius : look.closedCornerRadius }
-    private var showsBorder: Bool { look.islandBorderWidth > 0 && mode != .hidden && !(mode == .closed && !model.hasNotch) }
+    private var showsBorder: Bool { look.islandBorderWidth > 0 && mode != .hidden && !(mode == .closed && !model.hasNotch && !model.settings.general.fakeNotchOnPlainScreens) }
 
     var body: some View {
         let rect = model.shapeRect.insetBy(dx: -topRadius, dy: 0)

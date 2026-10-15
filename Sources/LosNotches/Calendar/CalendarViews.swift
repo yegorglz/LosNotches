@@ -85,8 +85,9 @@ struct EventRow: View {
         .contentShape(Rectangle())
         .onTapGesture {
             // Opens the event in Calendar.app (the URL scheme Calendar registers for EventKit events).
-            if let id = event.eventIdentifier?.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-               let url = URL(string: "ical://ekevent/\(id)?method=show&options=more") {
+            // shortcut: recurring events share one id (it would open the first occurrence), so those just open Calendar.
+            let id = event.eventIdentifier?.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
+            if let url = URL(string: id.map { "ical://ekevent/\($0)?method=show&options=more" } ?? "ical://") {
                 NSWorkspace.shared.open(url)
             }
         }
