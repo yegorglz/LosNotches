@@ -18,6 +18,8 @@ struct GeneralSettingsView: View {
         SettingsSection(title: "Notch", footer: "LosNotches tries its best to guess your notch size. Fine tune it so it matches your notch exactly.") {
             Toggle("Show on screens without a notch", isOn: s.general.enableOnNonNotchScreens)
             Toggle("Transparent handle (no-notch screens)", isOn: s.general.transparentHandle)
+            Toggle("Imitate a notch on screens without one", isOn: s.general.fakeNotchOnPlainScreens)
+            LabeledSlider(title: "Bar height on screens without a notch (0 = menu bar)", value: s.general.nonNotchHeight, range: 0...44)
             LabeledSlider(title: "Notch width fine tune", value: s.general.notchWidthFineTune, range: -20...20)
             LabeledSlider(title: "Notch height fine tune", value: s.general.notchHeightFineTune, range: -20...20)
             Toggle("Show in fullscreen apps", isOn: s.general.showInFullscreen)
@@ -47,6 +49,10 @@ struct AppearanceSettingsView: View {
             LabeledSlider(title: "Border width", value: s.appearance.islandBorderWidth, range: 0...4, step: 0.5)
             HexColorPicker(title: "Border color", hex: s.appearance.islandBorderColorHex)
             LabeledSlider(title: "Border opacity (%)", value: percent(s.appearance.islandBorderOpacity), range: 0...100)
+        }
+        SettingsSection(title: "Background") {
+            Toggle("Translucent open Nook (blurred)", isOn: s.appearance.translucentBackground)
+            Toggle("Shadow under the open Nook", isOn: s.appearance.openShadow)
         }
         SettingsSection(title: "Widgets") {
             LabeledSlider(title: "Corner radius", value: s.appearance.widgetCornerRadius, range: 0...30)
@@ -124,6 +130,7 @@ struct NookSettingsView: View {
         let layout = NookGridLayout.layout(s.wrappedValue.nook.widgets)
         let used = s.wrappedValue.nook.widgets.reduce(0) { $0 + max($1.widthCells, $1.kind.minCells) }
         SettingsSection(title: "Widgets", footer: "Width is measured in cells. 1 cell = \(Int(NookGridLayout.cell)) pt. Total cells: \(NookGridLayout.maxCells), used: \(used).") {
+            List {
             ForEach(Array(s.wrappedValue.nook.widgets.enumerated()), id: \.element.kind) { i, p in
                 HStack {
                     Text(p.kind.title)
@@ -138,6 +145,13 @@ struct NookSettingsView: View {
                 }
                 .buttonStyle(.borderless)
             }
+            .onMove { s.wrappedValue.nook.widgets.move(fromOffsets: $0, toOffset: $1) }
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .scrollDisabled(true)
+            .frame(height: CGFloat(s.wrappedValue.nook.widgets.count) * 32 + 4)
+            Text("Drag rows to reorder.").font(.caption).foregroundStyle(.secondary)
             let missing = WidgetKind.allCases.filter { k in !s.wrappedValue.nook.widgets.contains { $0.kind == k } }
             if !missing.isEmpty {
                 Menu("Add widget") {
@@ -255,8 +269,7 @@ struct MediaSettingsView: View {
         }
         SettingsSection(title: "Appearance") {
             Picker("Effect type", selection: s.media.effect) {
-                Text("Waves").tag(MediaEffect.waves)
-                Text("None").tag(MediaEffect.none)
+                ForEach(MediaEffect.allCases, id: \.self) { Text($0.title).tag($0) }
             }
             Toggle("Colored effects", isOn: s.media.coloredEffects)
             Text("If enabled, effects take the color of the current album; otherwise they are white.").font(.caption).foregroundStyle(.secondary)

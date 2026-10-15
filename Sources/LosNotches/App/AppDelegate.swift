@@ -55,6 +55,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     for t in ["Open", "Show in Finder", "Send via AirDrop", "Remove from tray"] { menu.addItem(withTitle: t, action: nil, keyEquivalent: "") }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 3) { menu.cancelTracking() }
                     menu.popUp(positioning: nil, at: NSPoint(x: view.bounds.midX, y: view.bounds.maxY - 80), in: view)
+                case "tab": m?.tab = parts.last == "tray" ? .tray : .nook
+                case "effect": s.settings.settings.media.effect = MediaEffect(rawValue: parts.last ?? "") ?? .waves
+                case "translucent": s.settings.settings.appearance.translucentBackground = parts.last == "on"
                 case "onboarding": s.settings.settings.general.onboardingCompleted = parts.last == "done"
                 case "widgets":
                     s.settings.settings.nook.widgets = parts.dropFirst().compactMap { p in

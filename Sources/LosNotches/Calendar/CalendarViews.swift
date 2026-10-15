@@ -82,6 +82,15 @@ struct EventRow: View {
             }
         }
         .frame(minHeight: 26)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // Opens the event in Calendar.app (the URL scheme Calendar registers for EventKit events).
+            if let id = event.eventIdentifier?.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+               let url = URL(string: "ical://ekevent/\(id)?method=show&options=more") {
+                NSWorkspace.shared.open(url)
+            }
+        }
+        .help("Open in Calendar")
     }
 }
 

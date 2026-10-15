@@ -3,6 +3,7 @@ import NookCore
 import SwiftUI
 
 enum DropTarget: Hashable { case tray, airdrop }
+enum NookTab: Hashable { case nook, tray }
 
 @MainActor
 @Observable
@@ -10,6 +11,7 @@ final class NotchViewModel {
     var metrics: ScreenMetrics
     private(set) var state = NotchState()
     var hoveredDropTarget: DropTarget?
+    var tab: NookTab = .nook
     var dropTargetFrames: [DropTarget: CGRect] = [:]
     @ObservationIgnored weak var panel: NotchPanel?
     @ObservationIgnored let services: AppServices
@@ -32,7 +34,8 @@ final class NotchViewModel {
 
     var windowFrame: CGRect { NotchGeometry.windowFrame(metrics) }
     var closedScreenRect: CGRect {
-        NotchGeometry.closedRect(metrics, fineTune: CGSize(width: settings.general.notchWidthFineTune, height: settings.general.notchHeightFineTune))
+        NotchGeometry.closedRect(metrics, fineTune: CGSize(width: settings.general.notchWidthFineTune, height: settings.general.notchHeightFineTune),
+                                 plainHeight: settings.general.nonNotchHeight > 0 ? settings.general.nonNotchHeight : nil)
     }
     var openScreenRect: CGRect { NotchGeometry.openRect(metrics) }
     var activityScreenRect: CGRect {
@@ -188,14 +191,19 @@ final class NotchViewModel {
         hoveredDropTarget = dropTargetFrames.first { $0.value.contains(localPoint) }?.key ?? .tray
     }
 
-    func handleDrop(_ urls: [URL]) -> Bool {
-        guard !urls.isEmpty else { return false }
-        if hoveredDropTarget == .airdrop {
-            services.tray.airDrop(urls)
-        } else {
-            services.tray.add(urls, move: NSEvent.modifierFlags.contains(.option))
-        }
+    /// Files, or (from browsers etc.) images / links / text, dropped on a target.
+    func handleDrop(_ pb: NSPasteboard) -> Bool {
+        let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+        let airdrop = hoveredDropTarget == .airdrop
         hoveredDropTarget = nil
+        if airdrop {
+            let items: [Any] = urls.isEmpty ? (NSImage(pasteboard: pb).map { [$0] } ?? pb.string(forType: .string).map { [$0] } ?? []) : urls
+            guard !items.isEmpty else { return false }
+            services.tray.share(items)
+        } else {
+            if urls.isEmpty { services.tray.paste(from: pb) } else { services.tray.add(urls, move: NSEvent.modifierFlags.contains(.option)) }
+            tab = .tray
+        }
         return true
     }
 }

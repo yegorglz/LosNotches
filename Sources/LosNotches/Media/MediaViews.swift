@@ -16,7 +16,7 @@ struct MediaWidgetView: View {
                     }
                     Spacer(minLength: 0)
                     if media.availableSources.count > 1 { SourceMenu() }
-                    if n.isPlaying, s.effect == .waves { WaveBars(playing: true, tint: s.coloredEffects ? media.tint : nil).frame(width: 18, height: 14) }
+                    if n.isPlaying { MediaEffectView(effect: s.effect, playing: true, tint: s.coloredEffects ? media.tint : nil).frame(width: 22, height: 16) }
                 }
                 MediaScrubber(nowPlaying: n)
                 HStack(spacing: 22) {
@@ -134,17 +134,70 @@ struct WaveBars: View {
     }
 }
 
+/// Playback visualiser. shortcut: animated from time, not real audio (that needs an audio-capture permission and a process tap), upgrade if users want true levels.
+struct MediaEffectView: View {
+    let effect: MediaEffect
+    let playing: Bool
+    let tint: Color?
+
+    var body: some View {
+        switch effect {
+        case .waves: WaveBars(playing: playing, tint: tint)
+        case .spectrograph: SpectrumBars(playing: playing, tint: tint)
+        case .circle: PulseCircle(playing: playing, tint: tint)
+        case .none: EmptyView()
+        }
+    }
+}
+
+struct SpectrumBars: View {
+    let playing: Bool
+    let tint: Color?
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 20, paused: !playing)) { ctx in
+            let t = ctx.date.timeIntervalSinceReferenceDate
+            HStack(alignment: .bottom, spacing: 1.5) {
+                ForEach(0..<7, id: \.self) { i in
+                    // Sum of two incommensurate sines per band looks like a lively, non-repeating spectrum.
+                    let v = playing ? 0.2 + 0.8 * abs(sin(t * (2.3 + Double(i) * 1.7)) * cos(t * (1.1 + Double(i) * 0.6) + Double(i))) : 0.15
+                    RoundedRectangle(cornerRadius: 1).fill(tint ?? .white).frame(width: 2).scaleEffect(y: v, anchor: .bottom)
+                }
+            }
+        }
+    }
+}
+
+struct PulseCircle: View {
+    let playing: Bool
+    let tint: Color?
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 20, paused: !playing)) { ctx in
+            let t = ctx.date.timeIntervalSinceReferenceDate
+            ZStack {
+                ForEach(0..<3, id: \.self) { i in
+                    let phase = (t * 0.9 + Double(i) / 3).truncatingRemainder(dividingBy: 1)
+                    Circle().stroke(tint ?? .white, lineWidth: 1.5)
+                        .scaleEffect(playing ? 0.3 + 0.7 * phase : 0.6)
+                        .opacity(playing ? 1 - phase : 0.4)
+                }
+                Circle().fill(tint ?? .white).frame(width: 4, height: 4)
+            }
+        }
+    }
+}
+
 struct MediaWing: View {
     let side: WingSide
     private var media: MediaController { AppServices.shared.media }
     var body: some View {
         let s = AppServices.shared.settings.settings.media
+        let playing = media.nowPlaying?.isPlaying ?? false
         if side == .left {
             AlbumArt(image: media.artwork, size: 22, radius: s.albumCornerRadius)
-        } else if s.effect == .waves {
-            WaveBars(playing: media.nowPlaying?.isPlaying ?? false, tint: s.coloredEffects ? media.tint : nil).frame(width: 20, height: 14)
+        } else if s.effect == .none {
+            Image(systemName: playing ? "play.fill" : "pause.fill").font(.system(size: 11))
         } else {
-            Image(systemName: media.nowPlaying?.isPlaying == true ? "play.fill" : "pause.fill").font(.system(size: 11))
+            MediaEffectView(effect: s.effect, playing: playing, tint: s.coloredEffects ? media.tint : nil).frame(width: 24, height: 16)
         }
     }
 }

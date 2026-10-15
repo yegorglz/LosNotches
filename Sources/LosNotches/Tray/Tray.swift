@@ -1,5 +1,6 @@
 import AppKit
 import NookCore
+import QuickLookThumbnailing
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -7,6 +8,7 @@ import UniformTypeIdentifiers
 @Observable
 final class TrayService {
     private(set) var items: [TrayItem] = []
+    private(set) var thumbnails: [UUID: NSImage] = [:]
     @ObservationIgnored private let store: TrayStore
     @ObservationIgnored private let activities: LiveActivityCenter
 
@@ -32,9 +34,25 @@ final class TrayService {
         sync()
     }
 
-    func airDrop(_ urls: [URL]) {
-        guard !urls.isEmpty, let service = NSSharingService(named: .sendViaAirDrop) else { return }
-        service.perform(withItems: urls)
+    func airDrop(_ urls: [URL]) { share(urls) }
+
+    /// AirDrop files, images or text.
+    func share(_ items: [Any]) {
+        guard !items.isEmpty, let service = NSSharingService(named: .sendViaAirDrop), service.canPerform(withItems: items) else { return }
+        service.perform(withItems: items)
+    }
+
+    /// Quick Look thumbnail (images, PDFs, video…), generated once per item; nil until ready.
+    func thumbnail(for item: TrayItem) -> NSImage? {
+        if let t = thumbnails[item.id] { return t }
+        guard let url = url(for: item) else { return nil }
+        let request = QLThumbnailGenerator.Request(fileAt: url, size: CGSize(width: 72, height: 72),
+                                                   scale: NSScreen.main?.backingScaleFactor ?? 2, representationTypes: .thumbnail)
+        QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { rep, _ in
+            guard let image = rep?.nsImage else { return }
+            DispatchQueue.main.async { self.thumbnails[item.id] = image }
+        }
+        return nil
     }
 
     /// ⌘V: file URLs, else an image (PNG), else text.
@@ -56,6 +74,7 @@ final class TrayService {
     private func sync() {
         store.pruneMissing()
         items = store.items
+        thumbnails = thumbnails.filter { id, _ in items.contains { $0.id == id } }
         updateActivity()
     }
 
@@ -67,15 +86,17 @@ final class TrayService {
 
 struct TrayWidgetView: View {
     let model: NotchViewModel
+    /// Full-width Tray tab: show every item instead of the 4-item stack.
+    var wide = false
     private var tray: TrayService { AppServices.shared.tray }
     @State private var expanded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                WidgetHeader(title: "Tray")
+                if !wide { WidgetHeader(title: "Tray") }
                 Spacer()
-                if tray.items.count > 4 {
+                if !wide, tray.items.count > 4 {
                     Button(expanded ? "Less" : "+\(tray.items.count - 4)") { withAnimation(.nook) { expanded.toggle() } }
                         .font(.system(size: 9, weight: .semibold)).buttonStyle(NookButtonStyle())
                 }
@@ -90,7 +111,7 @@ struct TrayWidgetView: View {
             } else {
                 ScrollView(.vertical, showsIndicators: false) {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 4)], spacing: 6) {
-                        ForEach(expanded ? tray.items : Array(tray.items.prefix(4))) { TrayFileView(item: $0) }
+                        ForEach(expanded || wide ? tray.items : Array(tray.items.prefix(4))) { TrayFileView(item: $0) }
                     }
                 }
             }
@@ -106,8 +127,9 @@ struct TrayFileView: View {
     var body: some View {
         let url = tray.url(for: item)
         VStack(spacing: 2) {
-            Image(nsImage: url.map { NSWorkspace.shared.icon(forFile: $0.path) } ?? NSImage())
-                .resizable().frame(width: 36, height: 36)
+            Image(nsImage: tray.thumbnail(for: item) ?? url.map { NSWorkspace.shared.icon(forFile: $0.path) } ?? NSImage())
+                .resizable().aspectRatio(contentMode: .fit).frame(width: 36, height: 36)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
             Text(url?.lastPathComponent ?? item.displayName).font(.system(size: 8)).lineLimit(1).truncationMode(.middle)
         }
         .frame(width: 52)

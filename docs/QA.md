@@ -14,6 +14,14 @@ Verification method: screenshots driven by a DEBUG-only distributed-notification
 - ⏳ Real hover / click / swipe / right-click (needs a human; logic covered by NotchReducer + accumulator tests)
 - ⏳ External display hot-plug, clamshell (no second display here; ScreenDiff tests cover the diffing)
 
+## Spaces & appearance (2026-10-15)
+- ⏳ Three-finger Space swipe: island stays put, no second island (fix: private notch space; needs a human swipe to confirm)
+- ⏳ Fullscreen-app swipe, sleep/wake, second display: island stays in the notch space
+- ✅ Context menu popped over the open Nook draws above the island (not hidden under it)
+- ✅ Appearance: island border, larger open radius, orange widget cards applied live; border not drawn along the screen edge
+- ✅ Translucent blurred Nook, Nook/Tray tabs, circle + spectrograph effects render
+- ⏳ Quick Look thumbnails, browser image/link drops, calendar event click-through, peek controls (need real input)
+
 ## Media
 - ✅ Adapter returns live Now Playing (Chrome/YouTube) and the media activity rendered with artwork + waves
 - ✅ Adapter killed → restarted automatically (new pid within 3 s)
@@ -35,4 +43,4 @@ Verification method: screenshots driven by a DEBUG-only distributed-notification
 
 ## Robustness
 - ✅ Launch never blocks on the Bluetooth permission prompt (IOBluetooth only after CoreBluetooth reports access)
-- ✅ 150 unit tests pass (`scripts/test.sh`)
+- ✅ 153 unit tests pass (`scripts/test.sh`)

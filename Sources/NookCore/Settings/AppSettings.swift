@@ -11,6 +11,10 @@ public struct GeneralSettings: Codable, Equatable, Sendable {
     public var launchAtLogin = false
     public var enableOnNonNotchScreens = true
     public var transparentHandle = false
+    /// Screens without a notch: draw a black notch shape instead of the slim pill.
+    public var fakeNotchOnPlainScreens = false
+    /// Screens without a notch: height of the closed bar / live-activity bar; 0 = menu bar height.
+    public var nonNotchHeight = 0.0
     public var notchWidthFineTune = 0.0
     public var notchHeightFineTune = 0.0
     public var alwaysOpenOnHover = false
@@ -31,6 +35,8 @@ public struct GeneralSettings: Codable, Equatable, Sendable {
         launchAtLogin = c.value(.launchAtLogin, d.launchAtLogin)
         enableOnNonNotchScreens = c.value(.enableOnNonNotchScreens, d.enableOnNonNotchScreens)
         transparentHandle = c.value(.transparentHandle, d.transparentHandle)
+        fakeNotchOnPlainScreens = c.value(.fakeNotchOnPlainScreens, d.fakeNotchOnPlainScreens)
+        nonNotchHeight = c.value(.nonNotchHeight, d.nonNotchHeight)
         notchWidthFineTune = c.value(.notchWidthFineTune, d.notchWidthFineTune)
         notchHeightFineTune = c.value(.notchHeightFineTune, d.notchHeightFineTune)
         alwaysOpenOnHover = c.value(.alwaysOpenOnHover, d.alwaysOpenOnHover)
@@ -186,6 +192,9 @@ public struct AppearanceSettings: Codable, Equatable, Sendable {
     public var widgetBorderWidth = 0.0
     public var widgetBorderColorHex = "#FFFFFF"
     public var widgetBorderOpacity = 0.15
+    /// Open Nook only: blurred translucent backdrop instead of solid black (closed stays black to match the notch).
+    public var translucentBackground = false
+    public var openShadow = true
 
     public init() {}
     public init(from decoder: Decoder) throws {
@@ -202,6 +211,8 @@ public struct AppearanceSettings: Codable, Equatable, Sendable {
         widgetBorderWidth = c.value(.widgetBorderWidth, d.widgetBorderWidth)
         widgetBorderColorHex = c.value(.widgetBorderColorHex, d.widgetBorderColorHex)
         widgetBorderOpacity = c.value(.widgetBorderOpacity, d.widgetBorderOpacity)
+        translucentBackground = c.value(.translucentBackground, d.translucentBackground)
+        openShadow = c.value(.openShadow, d.openShadow)
     }
 }
 

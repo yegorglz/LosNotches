@@ -6,8 +6,11 @@ displays) into a Dynamic-Island-style surface. No accounts, no licence server, n
 **Features:** media controls for any Now Playing app (Music, Spotify, browsers…) with scrubber and
 source switching · live activities (media, volume/brightness HUD, battery, Bluetooth, calendar,
 timers, tray) with Quick Peek · calendar with Zoom/Meet/Teams/Webex join buttons · notes (rich text +
-code mode) · to-dos (stars, auto-archive) · timers (wheels, haptics, survive restarts) · file Tray +
-AirDrop drop targets · camera Mirror · Shortcuts · Quick Apps · fullscreen detection · multi-display.
+code mode) · to-dos (stars, auto-archive) · timers (wheels, labels, haptics, survive restarts) · file
+Tray tab + AirDrop drop targets (files, images, links, text; Quick Look thumbnails) · camera Mirror ·
+Shortcuts · Quick Apps · fullscreen detection · multi-display · waves / spectrograph / circle effects ·
+interactive peeks (media + timer controls) · fully adjustable look (Settings → Appearance: corner radii,
+island border, widget cards, translucent blurred Nook, shadow, Liquid Glass buttons on macOS 26).
 
 Requires macOS 14.6+, Apple silicon or Intel.
 
@@ -24,7 +27,8 @@ Requires macOS 14.6+, Apple silicon or Intel.
 No Screen Recording, Full Disk Access or Input Monitoring is needed. The app is not sandboxed: it runs
 `/usr/bin/perl` with the bundled mediaremote-adapter (the only way to read Now Playing on macOS 15.4+)
 and freezes/thaws `OSDUIHelper` for the HUD replacement (always restored on quit, and at next launch
-after a crash).
+after a crash). The island lives in a private SkyLight space above all Spaces so it doesn't slide during
+Space switches (same technique as boring.notch; if macOS refuses it, the island falls back to normal Spaces).
 
 ## Build, test, run
 

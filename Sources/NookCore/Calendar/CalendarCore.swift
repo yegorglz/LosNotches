@@ -11,9 +11,12 @@ public struct EventSnapshot: Equatable, Sendable, Identifiable {
     public var url: URL?
     public var location: String?
     public var notes: String?
+    /// EventKit identifier (shared by recurrences), used to open the event in Calendar.
+    public var eventIdentifier: String?
 
     public init(id: String, title: String, start: Date, end: Date, isAllDay: Bool = false, calendarID: String = "",
-                colorHex: String = "#FF3B30", url: URL? = nil, location: String? = nil, notes: String? = nil) {
+                colorHex: String = "#FF3B30", url: URL? = nil, location: String? = nil, notes: String? = nil, eventIdentifier: String? = nil) {
+        self.eventIdentifier = eventIdentifier
         self.id = id
         self.title = title
         self.start = start

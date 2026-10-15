@@ -48,6 +48,32 @@ struct ActivityWing: View {
     }
 }
 
+/// "Interactive activities": small controls in the peek strip.
+struct PeekControls: View {
+    let activity: LiveActivity
+    var body: some View {
+        HStack(spacing: 10) {
+            switch activity.kind {
+            case .media:
+                let media = AppServices.shared.media
+                Button { media.send(.previous) } label: { Image(systemName: "backward.fill") }
+                Button { media.send(.togglePlayPause) } label: { Image(systemName: media.nowPlaying?.isPlaying == true ? "pause.fill" : "play.fill") }
+                Button { media.send(.next) } label: { Image(systemName: "forward.fill") }
+            case .timer where activity.id == "timer":
+                let store = AppServices.shared.timers
+                if let e = store.book.soonestRunning(now: store.now) {
+                    Button { store.mutate { $0.pause(id: e.id, now: Date()) } } label: { Image(systemName: "pause.fill") }
+                    Button { store.mutate { $0.cancel(id: e.id) } } label: { Image(systemName: "xmark") }
+                }
+            default:
+                EmptyView()
+            }
+        }
+        .font(.system(size: 11))
+        .buttonStyle(PressScaleStyle())
+    }
+}
+
 struct PeekView: View {
     let activity: LiveActivity
     var body: some View {
@@ -56,6 +82,7 @@ struct PeekView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .lineLimit(1)
                 .truncationMode(.tail)
+            if AppServices.shared.settings.settings.liveActivities.interactive { PeekControls(activity: activity) }
             if activity.kind == .calendar, AppServices.shared.settings.settings.liveActivities.interactive,
                let meeting = AppServices.shared.calendar.activeMeeting {
                 Button("Join \(meeting.service.displayName)") { NSWorkspace.shared.open(meeting.url) }

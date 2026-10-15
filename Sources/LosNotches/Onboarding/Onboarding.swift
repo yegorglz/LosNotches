@@ -149,7 +149,7 @@ struct OnboardingView: View {
 
     private func hint(_ symbol: String, _ text: String) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: symbol).frame(width: 18)
+            Image(systemName: symbol).frame(width: 18).symbolEffect(.pulse, options: .repeating)
             Text(text).font(.system(size: 11))
         }
         .opacity(0.85)

@@ -36,13 +36,14 @@ public enum NotchGeometry {
         max(24, m.frame.maxY - m.visibleFrame.maxY)
     }
 
-    public static func closedRect(_ m: ScreenMetrics, fineTune: CGSize) -> CGRect {
+    /// `plainHeight` overrides the closed height on screens without a notch (nil = menu bar height).
+    public static func closedRect(_ m: ScreenMetrics, fineTune: CGSize, plainHeight: CGFloat? = nil) -> CGRect {
         if hasNotch(m), let left = m.auxiliaryLeftWidth, let right = m.auxiliaryRightWidth {
             let width = m.frame.width - left - right + fineTune.width
             let height = m.safeAreaTop + fineTune.height
             return CGRect(x: m.frame.minX + left - fineTune.width / 2, y: m.frame.maxY - height, width: width, height: height)
         }
-        let height = menuBarHeight(m)
+        let height = plainHeight ?? menuBarHeight(m)
         return CGRect(x: m.frame.midX - handleHitWidth / 2, y: m.frame.maxY - height, width: handleHitWidth, height: height)
     }
 

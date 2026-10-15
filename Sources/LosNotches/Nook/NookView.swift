@@ -10,6 +10,11 @@ struct NookView: View {
         let carded = s.appearance.widgetBackgroundOpacity > 0 || s.appearance.widgetBorderWidth > 0
         VStack(spacing: 0) {
             topBar.frame(height: max(model.closedScreenRect.height, 28))
+            if model.tab == .tray {
+                TrayWidgetView(model: model, wide: true)
+                    .padding(.horizontal, 6)
+                    .frame(width: NookGridLayout.width(cells: NookGridLayout.maxCells), height: 150)
+            } else {
             ZStack(alignment: .topLeading) {
                 ForEach(Array(layout.frames.enumerated()), id: \.element.kind) { i, f in
                     WidgetRegistry.view(for: f.kind, model: model)
@@ -24,15 +29,25 @@ struct NookView: View {
                 }
             }
             .frame(width: NookGridLayout.width(cells: NookGridLayout.maxCells), height: 150, alignment: .topLeading)
+            }
             Spacer(minLength: 0)
         }
         .foregroundStyle(.white)
         .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
     }
 
+    private func tabButton(_ t: NookTab, _ symbol: String, _ title: String) -> some View {
+        Button { withAnimation(.nook) { model.tab = t } } label: {
+            Label(title, systemImage: symbol).labelStyle(.titleAndIcon).font(.system(size: 11, weight: .semibold))
+        }
+        .buttonStyle(NookButtonStyle())
+        .opacity(model.tab == t ? 1 : 0.45)
+    }
+
     private var topBar: some View {
-        HStack {
-            Text("LosNotches").font(.system(size: 12, weight: .semibold)).opacity(0.5)
+        HStack(spacing: 6) {
+            tabButton(.nook, "square.grid.2x2.fill", "Nook")
+            tabButton(.tray, "tray.full.fill", "Tray\(AppServices.shared.tray.items.isEmpty ? "" : " \(AppServices.shared.tray.items.count)")")
             Spacer()
             Button { model.send(.toggleLock) } label: {
                 Image(systemName: model.state.isLocked ? "lock.fill" : "lock.open")
@@ -57,13 +72,9 @@ extension View {
 
 struct NookButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        let fill = Color.white.opacity(configuration.isPressed ? 0.25 : 0.1)
         configuration.label
             .padding(.horizontal, 7).padding(.vertical, 4)
-            .background {
-                if AppServices.shared.settings.settings.general.preferRoundButtons { Capsule().fill(fill) }
-                else { RoundedRectangle(cornerRadius: 6).fill(fill) }
-            }
+            .nookGlass(round: AppServices.shared.settings.settings.general.preferRoundButtons)
             .scaleEffect(configuration.isPressed ? 0.94 : 1)
     }
 }
@@ -76,7 +87,7 @@ enum WidgetRegistry {
         case .calendar: CalendarWidgetView()
         case .notes: NotesWidgetView(model: model)
         case .todos: TodoWidgetView(model: model)
-        case .timer: TimerWidgetView()
+        case .timer: TimerWidgetView(model: model)
         case .mirror: MirrorWidgetView()
         case .shortcuts: ShortcutsWidgetView(model: model)
         case .quickApps: QuickAppsWidgetView(model: model)

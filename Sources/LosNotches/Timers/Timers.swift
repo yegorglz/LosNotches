@@ -65,7 +65,10 @@ final class TimersStore {
 }
 
 struct TimerWidgetView: View {
+    let model: NotchViewModel
     private var store: TimersStore { AppServices.shared.timers }
+    @State private var label = ""
+    @FocusState private var labelFocused: Bool
     @State private var h = 0
     @State private var m = 5
     @State private var s = 0
@@ -73,7 +76,13 @@ struct TimerWidgetView: View {
     var body: some View {
         let running = store.book.entries.filter { $0.state != .finished }
         VStack(spacing: 6) {
-            HStack { WidgetHeader(title: "Timers"); Spacer() }
+            HStack {
+                WidgetHeader(title: "Timers")
+                TextField("Label", text: $label)
+                    .textFieldStyle(.plain).font(.system(size: 10)).multilineTextAlignment(.trailing)
+                    .focused($labelFocused)
+                    .onChange(of: labelFocused) { _, f in model.textFieldFocused(f) }
+            }
             if running.isEmpty {
                 HStack(spacing: 2) {
                     WheelPicker(value: $h, range: 0...23, unit: "h")
@@ -87,7 +96,7 @@ struct TimerWidgetView: View {
                             .font(.system(size: 9, weight: .semibold)).buttonStyle(NookButtonStyle())
                     }
                     Spacer(minLength: 0)
-                    Button { store.mutate { $0.start(duration: TimerWheel.seconds(h: h, m: m, s: s), label: "", now: Date()) } } label: {
+                    Button { store.mutate { $0.start(duration: TimerWheel.seconds(h: h, m: m, s: s), label: label.trimmingCharacters(in: .whitespaces), now: Date()) } } label: {
                         Image(systemName: "play.fill")
                     }
                     .buttonStyle(NookButtonStyle())
@@ -97,7 +106,7 @@ struct TimerWidgetView: View {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 6) { ForEach(running) { TimerRow(entry: $0) } }
                 }
-                Button { store.mutate { $0.start(duration: TimerWheel.seconds(h: h, m: m, s: s), label: "", now: Date()) } } label: {
+                Button { store.mutate { $0.start(duration: TimerWheel.seconds(h: h, m: m, s: s), label: label.trimmingCharacters(in: .whitespaces), now: Date()) } } label: {
                     Label("Another \(DurationText.format(TimerWheel.seconds(h: h, m: m, s: s)))", systemImage: "plus")
                 }
                 .font(.system(size: 9)).buttonStyle(NookButtonStyle())

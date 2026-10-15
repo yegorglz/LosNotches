@@ -23,6 +23,12 @@ private func freshDefaults() -> UserDefaults { UserDefaults(suiteName: UUID().uu
     #expect(s.appearance == expected && s.general == GeneralSettings())
 }
 
+@Test func oldMediaEffectStillDecodesAndNewOnesRoundTrip() throws {
+    let s = try JSONDecoder().decode(MediaSettings.self, from: Data(#"{"effect":"circle"}"#.utf8))
+    #expect(s.effect == .circle)
+    #expect(try JSONDecoder().decode(MediaSettings.self, from: Data(#"{"effect":"bogus"}"#.utf8)).effect == .waves)
+}
+
 @Test func settingsPersistAcrossStoreInstances() {
     let d = freshDefaults()
     SettingsStore(defaults: d).settings.general.clickToOpen = false

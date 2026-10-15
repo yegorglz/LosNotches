@@ -66,7 +66,7 @@ final class CalendarService {
             EventSnapshot(id: "\(e.eventIdentifier ?? UUID().uuidString)-\(Int(e.startDate.timeIntervalSince1970))",
                           title: e.title ?? "Untitled", start: e.startDate, end: e.endDate, isAllDay: e.isAllDay,
                           calendarID: e.calendar.calendarIdentifier, colorHex: Self.hex(e.calendar.cgColor),
-                          url: e.url, location: e.location, notes: e.notes)
+                          url: e.url, location: e.location, notes: e.notes, eventIdentifier: e.eventIdentifier)
         }
         updateActivity()
     }

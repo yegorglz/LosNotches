@@ -15,9 +15,9 @@ struct NotchRootView: View {
         ZStack(alignment: .topLeading) {
             Color.clear
             ZStack(alignment: .top) {
-                NotchShape(topRadius: topRadius, bottomRadius: bottomRadius)
-                    .fill(Color.black)
-                    .opacity(mode == .hidden || (mode == .closed && !model.hasNotch) ? 0.001 : 1)
+                background
+                    .opacity(mode == .hidden || (mode == .closed && !model.hasNotch && !model.settings.general.fakeNotchOnPlainScreens) ? 0.001 : 1)
+                    .shadow(color: .black.opacity(mode == .open && look.openShadow ? 0.45 : 0), radius: 10, y: 5)
                 content
                     .padding(.horizontal, topRadius)
                     .clipShape(NotchShape(topRadius: topRadius, bottomRadius: bottomRadius))
@@ -45,6 +45,18 @@ struct NotchRootView: View {
         .environment(\.colorScheme, .dark)
     }
 
+    @ViewBuilder private var background: some View {
+        let shape = NotchShape(topRadius: topRadius, bottomRadius: bottomRadius)
+        if mode == .open, look.translucentBackground {
+            ZStack {
+                VisualEffectBlur().clipShape(shape)
+                shape.fill(Color.black.opacity(0.55))
+            }
+        } else {
+            shape.fill(Color.black)
+        }
+    }
+
     @ViewBuilder private var content: some View {
         switch mode {
         case .open:
@@ -58,7 +70,7 @@ struct NotchRootView: View {
         case .activity, .peek:
             if let a = model.activity { ActivityContainer(activity: a, model: model) }
         case .closed:
-            if !model.hasNotch, !model.settings.general.transparentHandle {
+            if !model.hasNotch, !model.settings.general.transparentHandle, !model.settings.general.fakeNotchOnPlainScreens {
                 Capsule().fill(Color.white.opacity(0.35))
                     .frame(width: NotchGeometry.handleVisualSize.width, height: NotchGeometry.handleVisualSize.height)
                     .padding(.top, 3)

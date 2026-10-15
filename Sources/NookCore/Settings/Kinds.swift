@@ -66,7 +66,16 @@ public enum MediaSourcePreference: String, Codable, CaseIterable, Sendable {
 }
 
 public enum MediaEffect: String, Codable, CaseIterable, Sendable {
-    case waves, none
+    case waves, spectrograph, circle, none
+
+    public var title: String {
+        switch self {
+        case .waves: "Waves"
+        case .spectrograph: "Spectrograph"
+        case .circle: "Circle"
+        case .none: "None"
+        }
+    }
 }
 
 public struct WidgetPlacement: Codable, Equatable, Sendable {

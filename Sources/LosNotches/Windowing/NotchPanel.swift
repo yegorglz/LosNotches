@@ -42,6 +42,9 @@ final class NotchPanel: NSPanel {
     }
 }
 
+/// Pasteboard types the notch accepts as drops (files, plus images / links / text from other apps).
+let acceptedDropTypes: [NSPasteboard.PasteboardType] = [.fileURL, .URL, .png, .tiff, .string]
+
 /// Hosting view that takes the first click (no "activate first" click) and acts as the file-drop destination.
 final class NotchHostingView<Content: View>: NSHostingView<Content> {
     weak var model: NotchViewModel?
@@ -51,7 +54,7 @@ final class NotchHostingView<Content: View>: NSHostingView<Content> {
     required init(rootView: Content) {
         super.init(rootView: rootView)
         sizingOptions = [] // content must never resize/move the panel
-        registerForDraggedTypes([.fileURL])
+        registerForDraggedTypes(acceptedDropTypes)
     }
 
     @available(*, unavailable) required init?(coder: NSCoder) { fatalError() }
@@ -74,8 +77,7 @@ final class NotchHostingView<Content: View>: NSHostingView<Content> {
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
-        let handled = model?.handleDrop(urls) ?? false
+        let handled = model?.handleDrop(sender.draggingPasteboard) ?? false
         model?.send(.dragExited)
         return handled
     }

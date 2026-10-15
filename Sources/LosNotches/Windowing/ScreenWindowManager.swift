@@ -26,6 +26,7 @@ final class ScreenWindowManager {
             _ = services.settings.settings.general.enableOnNonNotchScreens
             _ = services.settings.settings.general.notchWidthFineTune
             _ = services.settings.settings.general.notchHeightFineTune
+            _ = services.settings.settings.general.nonNotchHeight
         }) { [weak self] in self?.rebuild(force: true) }
         tracker.start()
     }

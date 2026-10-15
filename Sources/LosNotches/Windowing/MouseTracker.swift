@@ -43,7 +43,7 @@ final class MouseTracker {
 
     private func update(_ p: NSPoint, dragging: Bool) {
         let pb = NSPasteboard(name: .drag)
-        let fileDrag = dragging && pb.changeCount != dragChangeCount && (pb.types?.contains(.fileURL) ?? false)
+        let fileDrag = dragging && pb.changeCount != dragChangeCount && (pb.types?.contains(where: acceptedDropTypes.contains) ?? false)
         for m in manager.viewModels.values {
             if fileDrag, !m.state.isDropTarget, m.closedScreenRect.insetBy(dx: -40, dy: -40).contains(p) {
                 m.panel?.ignoresMouseEvents = false

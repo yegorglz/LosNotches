@@ -17,6 +17,10 @@ let ext = ScreenMetrics(displayID: 2, frame: CGRect(x: 1512, y: 0, width: 1920, 
     #expect(!NotchGeometry.hasNotch(ext))
     #expect(NotchGeometry.closedRect(ext, fineTune: .zero) == CGRect(x: 2382, y: 1055, width: 180, height: 25))
 }
+@Test func plainScreenHeightOverride() {
+    #expect(NotchGeometry.closedRect(ext, fineTune: .zero, plainHeight: 34) == CGRect(x: 2382, y: 1046, width: 180, height: 34))
+    #expect(NotchGeometry.closedRect(mbp, fineTune: .zero, plainHeight: 34).height == 32) // ignored on notch screens
+}
 @Test func mbpOpenRect() { #expect(NotchGeometry.openRect(mbp) == CGRect(x: 360, y: 792, width: 792, height: 190)) }
 @Test func openRectClampsToNarrowScreen() {
     var narrow = ext
