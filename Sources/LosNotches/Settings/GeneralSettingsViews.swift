@@ -28,17 +28,58 @@ struct GeneralSettingsView: View {
             Toggle("Prevent from closing on mouse leave", isOn: s.general.preventCloseOnMouseLeave)
             Toggle("Lock while typing", isOn: s.general.lockWhileTyping)
         }
-        SettingsSection(title: "Appearance") {
-            Toggle("Prefer round buttons", isOn: s.general.preferRoundButtons)
-            Toggle("Show dividers between widgets", isOn: s.general.showDividers)
-            LabeledSlider(title: "Padding around widgets", value: s.general.widgetPadding, range: 0...20)
-        }
         SettingsSection(title: "Reset") {
             Button("Reset all settings…", role: .destructive) { confirmReset = true }
                 .confirmationDialog("Reset all settings?", isPresented: $confirmReset) {
                     Button("Reset", role: .destructive) { AppServices.shared.settings.reset() }
                 } message: { Text("Your notes, to-dos, timers and tray files are kept.") }
         }
+    }
+}
+
+struct AppearanceSettingsView: View {
+    var body: some View {
+        let s = settingsBinding
+        SettingsSection(title: "Island", footer: "Changes apply live. Open the Nook to preview the open shape.") {
+            LabeledSlider(title: "Top flare radius", value: s.appearance.flareRadius, range: 0...16)
+            LabeledSlider(title: "Closed corner radius", value: s.appearance.closedCornerRadius, range: 0...20)
+            LabeledSlider(title: "Open corner radius", value: s.appearance.openCornerRadius, range: 0...48)
+            LabeledSlider(title: "Border width", value: s.appearance.islandBorderWidth, range: 0...4, step: 0.5)
+            HexColorPicker(title: "Border color", hex: s.appearance.islandBorderColorHex)
+            LabeledSlider(title: "Border opacity (%)", value: percent(s.appearance.islandBorderOpacity), range: 0...100)
+        }
+        SettingsSection(title: "Widgets") {
+            LabeledSlider(title: "Corner radius", value: s.appearance.widgetCornerRadius, range: 0...30)
+            LabeledSlider(title: "Background opacity (%)", value: percent(s.appearance.widgetBackgroundOpacity), range: 0...40)
+            LabeledSlider(title: "Border width", value: s.appearance.widgetBorderWidth, range: 0...3, step: 0.5)
+            HexColorPicker(title: "Border color", hex: s.appearance.widgetBorderColorHex)
+            LabeledSlider(title: "Border opacity (%)", value: percent(s.appearance.widgetBorderOpacity), range: 0...100)
+            LabeledSlider(title: "Padding around widgets", value: s.general.widgetPadding, range: 0...20)
+            Toggle("Show dividers between widgets", isOn: s.general.showDividers)
+            Toggle("Prefer round buttons", isOn: s.general.preferRoundButtons)
+        }
+        SettingsSection(title: "Reset") {
+            Button("Restore default appearance") { s.wrappedValue.appearance = AppearanceSettings() }
+        }
+    }
+
+    private func percent(_ b: Binding<Double>) -> Binding<Double> {
+        Binding(get: { (b.wrappedValue * 100).rounded() }, set: { b.wrappedValue = $0 / 100 })
+    }
+}
+
+struct HexColorPicker: View {
+    let title: String
+    @Binding var hex: String
+    var body: some View {
+        ColorPicker(title, selection: Binding(get: { Color(hex: hex) }, set: { hex = $0.hexString }), supportsOpacity: false)
+    }
+}
+
+extension Color {
+    var hexString: String {
+        guard let c = NSColor(self).usingColorSpace(.sRGB) else { return "#FFFFFF" }
+        return String(format: "#%02X%02X%02X", Int(c.redComponent * 255), Int(c.greenComponent * 255), Int(c.blueComponent * 255))
     }
 }
 
@@ -51,7 +92,7 @@ struct LabeledSlider: View {
         HStack {
             Text(title)
             Slider(value: $value, in: range, step: step)
-            Text("\(Int(value))").monospacedDigit().frame(width: 30, alignment: .trailing)
+            Text(step < 1 ? String(format: "%.1f", value) : "\(Int(value))").monospacedDigit().frame(width: 30, alignment: .trailing)
         }
     }
 }

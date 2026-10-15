@@ -42,6 +42,7 @@ final class ScreenWindowManager {
         let diff = ScreenDiff.compute(old: metrics, new: new)
         metrics = new
         for id in diff.removed {
+            if let p = panels[id] { NotchSpace.shared.remove(p) }
             panels[id]?.orderOut(nil)
             panels[id]?.close()
             panels[id] = nil
@@ -63,6 +64,7 @@ final class ScreenWindowManager {
         model.panel = panel
         panel.onScroll = { [weak model] e in model?.handleScroll(e) }
         panel.orderFrontRegardless()
+        NotchSpace.shared.add(panel) // needs a window number, so after ordering front
         viewModels[m.displayID] = model
         panels[m.displayID] = panel
         let id = m.displayID

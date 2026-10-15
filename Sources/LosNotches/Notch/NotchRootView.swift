@@ -5,8 +5,10 @@ struct NotchRootView: View {
     let model: NotchViewModel
 
     private var mode: NotchMode { model.state.mode }
-    private var topRadius: CGFloat { mode == .open ? 10 : 6 }
-    private var bottomRadius: CGFloat { mode == .open ? 24 : 10 }
+    private var look: AppearanceSettings { model.settings.appearance }
+    private var topRadius: CGFloat { look.flareRadius + (mode == .open ? 4 : 0) }
+    private var bottomRadius: CGFloat { mode == .open ? look.openCornerRadius : look.closedCornerRadius }
+    private var showsBorder: Bool { look.islandBorderWidth > 0 && mode != .hidden && !(mode == .closed && !model.hasNotch) }
 
     var body: some View {
         let rect = model.shapeRect.insetBy(dx: -topRadius, dy: 0)
@@ -16,6 +18,10 @@ struct NotchRootView: View {
                 NotchShape(topRadius: topRadius, bottomRadius: bottomRadius)
                     .fill(Color.black)
                     .opacity(mode == .hidden || (mode == .closed && !model.hasNotch) ? 0.001 : 1)
+                if showsBorder {
+                    NotchShape(topRadius: topRadius, bottomRadius: bottomRadius, outlineOnly: true)
+                        .stroke(Color(hex: look.islandBorderColorHex).opacity(look.islandBorderOpacity), lineWidth: look.islandBorderWidth)
+                }
                 content
                     .padding(.horizontal, topRadius)
                     .clipShape(NotchShape(topRadius: topRadius, bottomRadius: bottomRadius))

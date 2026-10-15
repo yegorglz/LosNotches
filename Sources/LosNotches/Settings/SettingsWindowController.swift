@@ -3,11 +3,12 @@ import NookCore
 import SwiftUI
 
 enum SettingsTab: String, CaseIterable, Identifiable {
-    case general, nook, liveActivities, gestures, media, calendar, about
+    case general, appearance, nook, liveActivities, gestures, media, calendar, about
     var id: Self { self }
     var title: String {
         switch self {
         case .general: "General"
+        case .appearance: "Appearance"
         case .nook: "Nook & Widgets"
         case .liveActivities: "Live Activities"
         case .gestures: "Gestures"
@@ -19,6 +20,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .general: "gearshape"
+        case .appearance: "paintbrush"
         case .nook: "square.grid.3x1.below.line.grid.1x2"
         case .liveActivities: "capsule.inset.filled"
         case .gestures: "hand.draw"
@@ -77,6 +79,7 @@ struct SettingsRootView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     switch selection.tab {
                     case .general: GeneralSettingsView()
+                    case .appearance: AppearanceSettingsView()
                     case .nook: NookSettingsView()
                     case .liveActivities: LiveActivitiesSettingsView()
                     case .gestures: GesturesSettingsView()

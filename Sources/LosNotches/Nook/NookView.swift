@@ -7,15 +7,17 @@ struct NookView: View {
     var body: some View {
         let s = model.settings
         let layout = NookGridLayout.layout(s.nook.widgets)
+        let carded = s.appearance.widgetBackgroundOpacity > 0 || s.appearance.widgetBorderWidth > 0
         VStack(spacing: 0) {
             topBar.frame(height: max(model.closedScreenRect.height, 28))
             ZStack(alignment: .topLeading) {
                 ForEach(Array(layout.frames.enumerated()), id: \.element.kind) { i, f in
                     WidgetRegistry.view(for: f.kind, model: model)
-                        .padding(s.general.widgetPadding / 2)
+                        .padding(s.general.widgetPadding / 2 + (carded ? 4 + s.appearance.widgetCornerRadius * 0.3 : 0))
                         .frame(width: f.width, height: 150)
+                        .widgetCard(s.appearance)
                         .offset(x: f.x)
-                    if s.general.showDividers, i > 0 {
+                    if s.general.showDividers, !carded, i > 0 {
                         Rectangle().fill(.white.opacity(0.08)).frame(width: 1, height: 120)
                             .offset(x: f.x - NookGridLayout.spacing / 2, y: 15)
                     }
@@ -41,6 +43,16 @@ struct NookView: View {
         .buttonStyle(NookButtonStyle())
         .font(.system(size: 12))
         .padding(.horizontal, 20)
+    }
+}
+
+extension View {
+    /// User-styled widget card: fill, border and corner radius from Appearance settings.
+    func widgetCard(_ a: AppearanceSettings) -> some View {
+        let shape = RoundedRectangle(cornerRadius: max(0, a.widgetCornerRadius), style: .continuous)
+        return background(shape.fill(Color.white.opacity(a.widgetBackgroundOpacity)))
+            .overlay(shape.strokeBorder(Color(hex: a.widgetBorderColorHex).opacity(a.widgetBorderOpacity), lineWidth: max(0, a.widgetBorderWidth)))
+            .clipShape(shape)
     }
 }
 

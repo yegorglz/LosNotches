@@ -41,6 +41,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     let kind = LiveActivityKind(rawValue: parts.last ?? "") ?? .hud
                     s.activities.upsert(LiveActivity(id: "debug", kind: kind, revision: Int.random(in: 0...999), expiresAt: Date() + 6, peekText: "Debug \(kind.title)"))
                 case "peek": s.activities.requestPeek(id: "debug", seconds: 4)
+                case "appearance":
+                    var look = AppearanceSettings()
+                    if parts.last == "demo" {
+                        look.openCornerRadius = 36; look.islandBorderWidth = 1.5; look.islandBorderOpacity = 0.5
+                        look.widgetBackgroundOpacity = 0.08; look.widgetBorderWidth = 1; look.widgetBorderColorHex = "#FF9F0A"; look.widgetBorderOpacity = 0.6
+                    }
+                    s.settings.settings.appearance = look
                 case "onboarding": s.settings.settings.general.onboardingCompleted = parts.last == "done"
                 case "widgets":
                     s.settings.settings.nook.widgets = parts.dropFirst().compactMap { p in

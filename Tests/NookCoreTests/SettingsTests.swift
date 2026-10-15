@@ -15,6 +15,14 @@ private func freshDefaults() -> UserDefaults { UserDefaults(suiteName: UUID().uu
     #expect(s == expected)
 }
 
+@Test func partialAppearanceKeepsOtherDefaults() throws {
+    let s = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"appearance":{"openCornerRadius":30,"widgetBorderWidth":1.5}}"#.utf8))
+    var expected = AppearanceSettings()
+    expected.openCornerRadius = 30
+    expected.widgetBorderWidth = 1.5
+    #expect(s.appearance == expected && s.general == GeneralSettings())
+}
+
 @Test func settingsPersistAcrossStoreInstances() {
     let d = freshDefaults()
     SettingsStore(defaults: d).settings.general.clickToOpen = false

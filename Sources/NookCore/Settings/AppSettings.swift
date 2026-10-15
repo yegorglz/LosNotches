@@ -173,6 +173,38 @@ public struct WidgetContentSettings: Codable, Equatable, Sendable {
     }
 }
 
+/// Island shape and widget card styling (all user-adjustable).
+public struct AppearanceSettings: Codable, Equatable, Sendable {
+    public var flareRadius = 6.0
+    public var closedCornerRadius = 10.0
+    public var openCornerRadius = 24.0
+    public var islandBorderWidth = 0.0
+    public var islandBorderColorHex = "#FFFFFF"
+    public var islandBorderOpacity = 0.2
+    public var widgetCornerRadius = 14.0
+    public var widgetBackgroundOpacity = 0.0
+    public var widgetBorderWidth = 0.0
+    public var widgetBorderColorHex = "#FFFFFF"
+    public var widgetBorderOpacity = 0.15
+
+    public init() {}
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = Self()
+        flareRadius = c.value(.flareRadius, d.flareRadius)
+        closedCornerRadius = c.value(.closedCornerRadius, d.closedCornerRadius)
+        openCornerRadius = c.value(.openCornerRadius, d.openCornerRadius)
+        islandBorderWidth = c.value(.islandBorderWidth, d.islandBorderWidth)
+        islandBorderColorHex = c.value(.islandBorderColorHex, d.islandBorderColorHex)
+        islandBorderOpacity = c.value(.islandBorderOpacity, d.islandBorderOpacity)
+        widgetCornerRadius = c.value(.widgetCornerRadius, d.widgetCornerRadius)
+        widgetBackgroundOpacity = c.value(.widgetBackgroundOpacity, d.widgetBackgroundOpacity)
+        widgetBorderWidth = c.value(.widgetBorderWidth, d.widgetBorderWidth)
+        widgetBorderColorHex = c.value(.widgetBorderColorHex, d.widgetBorderColorHex)
+        widgetBorderOpacity = c.value(.widgetBorderOpacity, d.widgetBorderOpacity)
+    }
+}
+
 public struct AppSettings: Codable, Equatable, Sendable {
     public var general = GeneralSettings()
     public var gestures = GestureSettings()
@@ -182,6 +214,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var nook = NookLayoutSettings()
     public var mirror = MirrorSettings()
     public var content = WidgetContentSettings()
+    public var appearance = AppearanceSettings()
 
     public static let `default` = AppSettings()
 
@@ -196,5 +229,6 @@ public struct AppSettings: Codable, Equatable, Sendable {
         nook = c.value(.nook, NookLayoutSettings())
         mirror = c.value(.mirror, MirrorSettings())
         content = c.value(.content, WidgetContentSettings())
+        appearance = c.value(.appearance, AppearanceSettings())
     }
 }
