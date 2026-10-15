@@ -52,7 +52,6 @@ extension View {
         let shape = RoundedRectangle(cornerRadius: max(0, a.widgetCornerRadius), style: .continuous)
         return background(shape.fill(Color.white.opacity(a.widgetBackgroundOpacity)))
             .overlay(shape.strokeBorder(Color(hex: a.widgetBorderColorHex).opacity(a.widgetBorderOpacity), lineWidth: max(0, a.widgetBorderWidth)))
-            .clipShape(shape)
     }
 }
 

@@ -7,19 +7,23 @@ import AppKit
 final class NotchSpace {
     static let shared = NotchSpace()
     private let cid = _CGSDefaultConnection()
-    private let id: UInt64
+    private let id: UInt64?
 
     private init() {
-        id = CGSSpaceCreate(cid, 1, nil) // flag must be 1, or Finder draws desktop icons into it
+        let space = CGSSpaceCreate(cid, 1, nil) // flag must be 1, or Finder draws desktop icons into it
+        id = space == 0 ? nil : space // 0 = API refused: windows simply stay on normal Spaces
+        guard let id else { return }
         CGSSpaceSetAbsoluteLevel(cid, id, Int32.max)
         CGSShowSpaces(cid, [NSNumber(value: id)] as CFArray)
     }
 
     func add(_ window: NSWindow) {
+        guard let id, window.windowNumber > 0 else { return }
         CGSAddWindowsToSpaces(cid, [NSNumber(value: window.windowNumber)] as CFArray, [NSNumber(value: id)] as CFArray)
     }
 
     func remove(_ window: NSWindow) {
+        guard let id else { return }
         CGSRemoveWindowsFromSpaces(cid, [NSNumber(value: window.windowNumber)] as CFArray, [NSNumber(value: id)] as CFArray)
     }
 }

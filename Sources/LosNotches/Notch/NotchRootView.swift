@@ -18,13 +18,14 @@ struct NotchRootView: View {
                 NotchShape(topRadius: topRadius, bottomRadius: bottomRadius)
                     .fill(Color.black)
                     .opacity(mode == .hidden || (mode == .closed && !model.hasNotch) ? 0.001 : 1)
-                if showsBorder {
-                    NotchShape(topRadius: topRadius, bottomRadius: bottomRadius, outlineOnly: true)
-                        .stroke(Color(hex: look.islandBorderColorHex).opacity(look.islandBorderOpacity), lineWidth: look.islandBorderWidth)
-                }
                 content
                     .padding(.horizontal, topRadius)
                     .clipShape(NotchShape(topRadius: topRadius, bottomRadius: bottomRadius))
+                if showsBorder {
+                    NotchShape(topRadius: topRadius, bottomRadius: bottomRadius, outlineOnly: true)
+                        .stroke(Color(hex: look.islandBorderColorHex).opacity(look.islandBorderOpacity), lineWidth: look.islandBorderWidth)
+                        .allowsHitTesting(false)
+                }
             }
             .frame(width: rect.width, height: rect.height)
             .contentShape(NotchShape(topRadius: topRadius, bottomRadius: bottomRadius))

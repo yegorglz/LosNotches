@@ -82,8 +82,11 @@ final class NotchViewModel {
         if old == .open {
             services.flushAll()
             endTyping()
-            if panel?.isKeyWindow == true, let front = NSWorkspace.shared.frontmostApplication, front != .current {
-                front.activate() // give keyboard focus back to the app the user was in
+            if let panel, panel.isKeyWindow {
+                // Give keyboard focus back to the app the user was in; orderOut drops the panel from every space.
+                panel.orderOut(nil)
+                panel.orderFrontRegardless()
+                NotchSpace.shared.add(panel)
             }
         }
         if state.mode != .peek { peekWork?.cancel(); peekEndWork?.cancel() }

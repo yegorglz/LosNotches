@@ -1,4 +1,4 @@
-import AVFoundation
+@preconcurrency import AVFoundation // AVCaptureSession is used only on its own serial queue
 import NookCore
 import SwiftUI
 

@@ -79,7 +79,8 @@ struct HexColorPicker: View {
 extension Color {
     var hexString: String {
         guard let c = NSColor(self).usingColorSpace(.sRGB) else { return "#FFFFFF" }
-        return String(format: "#%02X%02X%02X", Int(c.redComponent * 255), Int(c.greenComponent * 255), Int(c.blueComponent * 255))
+        let byte = { (v: CGFloat) in Int((min(max(v, 0), 1) * 255).rounded()) } // P3 picks can fall outside sRGB 0...1
+        return String(format: "#%02X%02X%02X", byte(c.redComponent), byte(c.greenComponent), byte(c.blueComponent))
     }
 }
 

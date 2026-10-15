@@ -48,6 +48,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         look.widgetBackgroundOpacity = 0.08; look.widgetBorderWidth = 1; look.widgetBorderColorHex = "#FF9F0A"; look.widgetBorderOpacity = 0.6
                     }
                     s.settings.settings.appearance = look
+                case "menu":
+                    // Pops a context menu over the open Nook for 3 s to check it isn't drawn under the island.
+                    guard let m, let view = m.panel?.contentView else { break }
+                    let menu = NSMenu()
+                    for t in ["Open", "Show in Finder", "Send via AirDrop", "Remove from tray"] { menu.addItem(withTitle: t, action: nil, keyEquivalent: "") }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) { menu.cancelTracking() }
+                    menu.popUp(positioning: nil, at: NSPoint(x: view.bounds.midX, y: view.bounds.maxY - 80), in: view)
                 case "onboarding": s.settings.settings.general.onboardingCompleted = parts.last == "done"
                 case "widgets":
                     s.settings.settings.nook.widgets = parts.dropFirst().compactMap { p in
