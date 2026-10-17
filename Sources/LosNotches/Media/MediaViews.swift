@@ -121,20 +121,21 @@ struct WaveBars: View {
     let playing: Bool
     let tint: Color?
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 15, paused: !playing)) { ctx in
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: !playing)) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
+            let audio = AudioDrive.now
             HStack(spacing: 2) {
                 ForEach(0..<4, id: \.self) { i in
                     Capsule().fill(tint ?? .white)
                         .frame(width: 3)
-                        .scaleEffect(y: playing ? 0.35 + 0.65 * abs(sin(t * (3.1 + Double(i) * 0.9) + Double(i))) : 0.3, anchor: .center)
+                        .scaleEffect(y: playing ? 0.3 + 0.7 * audio.drive * abs(sin(t * (3.1 + Double(i) * 0.9) + Double(i))) : 0.3, anchor: .center)
                 }
             }
         }
     }
 }
 
-/// Playback visualiser. shortcut: animated from time, not real audio (that needs an audio-capture permission and a process tap), upgrade if users want true levels.
+/// Playback visualiser, driven by the real playback loudness (`AudioDrive`).
 struct MediaEffectView: View {
     let effect: MediaEffect
     let playing: Bool
@@ -150,16 +151,29 @@ struct MediaEffectView: View {
     }
 }
 
+/// How hard effects move this frame: the real playback loudness when the system-audio tap has signal,
+/// otherwise 1 (full idle animation) so effects never freeze if permission was declined.
+struct AudioDrive {
+    let drive: Double
+    let live: Bool
+    static var now: AudioDrive {
+        let m = AudioLevelMonitor.shared
+        return m.hasSignal ? AudioDrive(drive: Double(m.level), live: true) : AudioDrive(drive: 1, live: false)
+    }
+}
+
 struct SpectrumBars: View {
     let playing: Bool
     let tint: Color?
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 20, paused: !playing)) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
+            let audio = AudioDrive.now
             HStack(alignment: .bottom, spacing: 1.5) {
                 ForEach(0..<7, id: \.self) { i in
                     // Sum of two incommensurate sines per band looks like a lively, non-repeating spectrum.
-                    let v = playing ? 0.2 + 0.8 * abs(sin(t * (2.3 + Double(i) * 1.7)) * cos(t * (1.1 + Double(i) * 0.6) + Double(i))) : 0.15
+                    let wobble = abs(sin(t * (2.3 + Double(i) * 1.7)) * cos(t * (1.1 + Double(i) * 0.6) + Double(i)))
+                    let v = playing ? 0.12 + 0.88 * audio.drive * (audio.live ? 0.45 + 0.55 * wobble : wobble) : 0.15
                     RoundedRectangle(cornerRadius: 1).fill(tint ?? .white).frame(width: 2).scaleEffect(y: v, anchor: .bottom)
                 }
             }
@@ -173,14 +187,15 @@ struct PulseCircle: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 20, paused: !playing)) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
+            let audio = AudioDrive.now
             ZStack {
                 ForEach(0..<3, id: \.self) { i in
-                    let phase = (t * 0.9 + Double(i) / 3).truncatingRemainder(dividingBy: 1)
+                    let phase = (t * (0.6 + 0.8 * audio.drive) + Double(i) / 3).truncatingRemainder(dividingBy: 1)
                     Circle().stroke(tint ?? .white, lineWidth: 1.5)
-                        .scaleEffect(playing ? 0.3 + 0.7 * phase : 0.6)
+                        .scaleEffect(playing ? 0.3 + 0.7 * phase * (0.35 + 0.65 * audio.drive) : 0.6)
                         .opacity(playing ? 1 - phase : 0.4)
                 }
-                Circle().fill(tint ?? .white).frame(width: 4, height: 4)
+                Circle().fill(tint ?? .white).frame(width: 4 + 5 * audio.drive, height: 4 + 5 * audio.drive)
             }
         }
     }

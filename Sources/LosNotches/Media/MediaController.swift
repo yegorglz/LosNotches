@@ -39,11 +39,14 @@ final class MediaController {
         // Both poll at 1 Hz only while their app runs, so the source switcher can offer them.
         music.start()
         spotify.start()
-        observeChanges({ [settings] in _ = settings.settings.media.preferredSource }) { [weak self] in self?.recompute() }
+        observeChanges({ [settings] in _ = (settings.settings.media.preferredSource, settings.settings.media.effect) }) { [weak self] in self?.recompute() }
         observeChanges({ [settings] in _ = settings.settings.liveActivities.inactivityTimeoutSeconds }) { [weak self] in self?.recompute() }
     }
 
-    func stop() { adapter?.stop() }
+    func stop() {
+        adapter?.stop()
+        AudioLevelMonitor.shared.stop()
+    }
 
     private func recompute() {
         var n = MediaSourceSelector.select(snapshot, preference: settings.settings.media.preferredSource)
@@ -52,6 +55,9 @@ final class MediaController {
             n?.artworkData = sys.artworkData
         }
         nowPlaying = n
+        // Only listen to system audio while an effect is actually animating something.
+        // shortcut: the tap follows the output device chosen at start; it restarts on the next play/pause after a device switch.
+        if n?.isPlaying == true, settings.settings.media.effect != .none { AudioLevelMonitor.shared.start() } else { AudioLevelMonitor.shared.stop() }
         updateArtwork()
         updateActivity()
     }

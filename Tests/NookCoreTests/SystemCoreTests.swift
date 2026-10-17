@@ -60,6 +60,14 @@ private func win(_ pid: Int32, _ b: CGRect, owner: String = "Safari", layer: Int
     #expect(FullscreenDetector.isFullscreen(windows: [win(5, below)], screenCG: screen, safeAreaTop: 32, frontmostPID: 5))
     #expect(!FullscreenDetector.isFullscreen(windows: [win(5, below)], screenCG: screen, frontmostPID: 5)) // no notch: not fullscreen
 }
+@Test func fullscreenSpacesParsed() {
+    let managed: [[String: Any]] = [
+        ["Display Identifier": "A", "Current Space": ["type": 4]],
+        ["Display Identifier": "B", "Current Space": ["type": 0]],
+        ["Display Identifier": "C"],
+    ]
+    #expect(FullscreenSpaces.displays(from: managed) == ["A"])
+}
 @Test func maximizedWindowWithHiddenDockIsNotFullscreen() {
     // Real 14" MBP: notch 32 pt, menu bar 33 pt; a maximized window starts at the menu bar.
     let maximized = CGRect(x: 0, y: 33, width: 1512, height: 949)

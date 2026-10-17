@@ -27,10 +27,14 @@ final class FullscreenMonitor {
             return WindowInfo(ownerPID: pid, ownerName: d[kCGWindowOwnerName as String] as? String ?? "", layer: layer, bounds: rect)
         }
         let front = NSWorkspace.shared.frontmostApplication?.processIdentifier
+        // Native fullscreen (Chrome/YouTube, Safari, QuickTime…) lives in its own Space; window bounds alone miss some apps.
+        let fsSpaces = FullscreenSpaces.displays(from: CGSCopyManagedDisplaySpaces(_CGSDefaultConnection()) as? [[String: Any]] ?? [])
         let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
         for screen in NSScreen.screens {
             let cg = NotchGeometry.cgRect(fromAppKit: screen.frame, primaryScreenHeight: primaryHeight)
-            let fs = FullscreenDetector.isFullscreen(windows: windows, screenCG: cg, safeAreaTop: screen.safeAreaInsets.top, frontmostPID: front)
+            let uuid = CFUUIDCreateString(nil, CGDisplayCreateUUIDFromDisplayID(screen.displayID).takeRetainedValue()) as String
+            let fs = fsSpaces.contains(uuid) || fsSpaces.contains("Main")
+                || FullscreenDetector.isFullscreen(windows: windows, screenCG: cg, safeAreaTop: screen.safeAreaInsets.top, frontmostPID: front)
             if state[screen.displayID] != fs {
                 state[screen.displayID] = fs
                 onChange?(screen.displayID, fs)
@@ -38,3 +42,6 @@ final class FullscreenMonitor {
         }
     }
 }
+
+@_silgen_name("_CGSDefaultConnection") private func _CGSDefaultConnection() -> Int32
+@_silgen_name("CGSCopyManagedDisplaySpaces") private func CGSCopyManagedDisplaySpaces(_ cid: Int32) -> CFArray

@@ -32,6 +32,8 @@
 	<string>LosNotches shows your Bluetooth devices when they connect or disconnect.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>LosNotches shows your upcoming events in the calendar widget and live activity.</string>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>LosNotches listens to how loud your Mac's audio is so the media waves move with the music. Nothing is recorded or saved.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>LosNotches uses the camera only for the Mirror widget.</string>
 	<key>NSHighResolutionCapable</key>

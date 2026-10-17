@@ -30,3 +30,15 @@ public enum FullscreenDetector {
         }
     }
 }
+
+/// Reads `CGSCopyManagedDisplaySpaces` output: which displays are currently showing a fullscreen Space (type 4).
+public enum FullscreenSpaces {
+    /// Returns display UUID strings in a fullscreen Space; `"Main"` means all displays share one set of Spaces.
+    public static func displays(from managed: [[String: Any]]) -> Set<String> {
+        Set(managed.compactMap { d in
+            guard let id = d["Display Identifier"] as? String,
+                  (d["Current Space"] as? [String: Any])?["type"] as? Int == 4 else { return nil }
+            return id
+        })
+    }
+}

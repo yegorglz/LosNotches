@@ -77,6 +77,7 @@ LosNotches asks only for what each feature needs, and you can skip any of them. 
 | Calendar | To show your events and meeting reminders. |
 | Camera | For the Mirror widget. It's never on unless the Mirror is visible. |
 | Bluetooth | To show when headphones, mice and keyboards connect. |
+| System audio recording | So the waves, spectrograph and circle move with how loud your music actually is. Only the loudness is read; nothing is recorded. Decline it and the effects just animate on their own. |
 | Automation | To control Music and Spotify directly. macOS asks the first time either app is open. |
 | Accessibility | Only for the volume & brightness HUD replacement, which is off by default. |
 
@@ -138,7 +139,6 @@ A few parts are less obvious:
 
 ## Known limits
 
-- The spectrograph and circle effects follow the beat of time, not your actual audio.
 - Brightness keys control the built-in display only.
 - Some of this was built on private macOS APIs (Now Playing, display brightness, the window space). A future
   macOS update could break them. When that happens LosNotches falls back gracefully, but the feature stops working.
