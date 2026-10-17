@@ -55,6 +55,16 @@ private func snap(_ plugged: Bool, _ pct: Int, charged: Bool = false) -> PowerSn
 private let screen = CGRect(x: 0, y: 0, width: 1512, height: 982)
 private func win(_ pid: Int32, _ b: CGRect, owner: String = "Safari", layer: Int = 0) -> WindowInfo { WindowInfo(ownerPID: pid, ownerName: owner, layer: layer, bounds: b) }
 @Test func fullscreenWindowDetected() { #expect(FullscreenDetector.isFullscreen(windows: [win(5, screen)], screenCG: screen, frontmostPID: 5)) }
+@Test func fullscreenBelowNotchDetected() {
+    let below = CGRect(x: 0, y: 32, width: 1512, height: 950)
+    #expect(FullscreenDetector.isFullscreen(windows: [win(5, below)], screenCG: screen, safeAreaTop: 32, frontmostPID: 5))
+    #expect(!FullscreenDetector.isFullscreen(windows: [win(5, below)], screenCG: screen, frontmostPID: 5)) // no notch: not fullscreen
+}
+@Test func maximizedWindowWithHiddenDockIsNotFullscreen() {
+    // Real 14" MBP: notch 32 pt, menu bar 33 pt; a maximized window starts at the menu bar.
+    let maximized = CGRect(x: 0, y: 33, width: 1512, height: 949)
+    #expect(!FullscreenDetector.isFullscreen(windows: [win(5, maximized)], screenCG: screen, safeAreaTop: 32, frontmostPID: 5))
+}
 @Test func maximizedWindowNotFullscreen() {
     #expect(!FullscreenDetector.isFullscreen(windows: [win(5, CGRect(x: 0, y: 33, width: 1512, height: 949))], screenCG: screen, frontmostPID: 5))
 }

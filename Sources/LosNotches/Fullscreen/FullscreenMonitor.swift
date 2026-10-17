@@ -30,7 +30,7 @@ final class FullscreenMonitor {
         let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
         for screen in NSScreen.screens {
             let cg = NotchGeometry.cgRect(fromAppKit: screen.frame, primaryScreenHeight: primaryHeight)
-            let fs = FullscreenDetector.isFullscreen(windows: windows, screenCG: cg, frontmostPID: front)
+            let fs = FullscreenDetector.isFullscreen(windows: windows, screenCG: cg, safeAreaTop: screen.safeAreaInsets.top, frontmostPID: front)
             if state[screen.displayID] != fs {
                 state[screen.displayID] = fs
                 onChange?(screen.displayID, fs)
